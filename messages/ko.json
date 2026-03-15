@@ -1,0 +1,21 @@
+{
+  "nav": {
+    "home": "홈",
+    "about": "협회 소개",
+    "races": "대회",
+    "news": "뉴스·공지",
+    "contact": "문의",
+    "members": "회원"
+  },
+  "home": {
+    "hero_title": "대한트레일스포츠협회",
+    "hero_subtitle": "대자연을 달리는 사람들의 협회",
+    "upcoming_races": "예정된 대회",
+    "latest_news": "최신 공지"
+  },
+  "common": {
+    "more": "더 보기",
+    "apply": "신청하기",
+    "language": "언어"
+  }
+}

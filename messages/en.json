@@ -1,0 +1,21 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "races": "Races",
+    "news": "News",
+    "contact": "Contact",
+    "members": "Members"
+  },
+  "home": {
+    "hero_title": "Korea Trail Sports Association",
+    "hero_subtitle": "For those who run through nature",
+    "upcoming_races": "Upcoming Races",
+    "latest_news": "Latest News"
+  },
+  "common": {
+    "more": "View More",
+    "apply": "Apply",
+    "language": "Language"
+  }
+}
