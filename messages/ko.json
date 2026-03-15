@@ -10,12 +10,65 @@
   "home": {
     "hero_title": "대한트레일스포츠협회",
     "hero_subtitle": "대자연을 달리는 사람들의 협회",
+    "hero_cta": "대회 일정 보기",
     "upcoming_races": "예정된 대회",
-    "latest_news": "최신 공지"
+    "latest_news": "최신 공지",
+    "view_all": "전체 보기"
+  },
+  "about": {
+    "title": "협회 소개",
+    "history_title": "협회 연혁",
+    "mission_title": "미션 & 비전",
+    "mission": "대한민국 트레일스포츠 문화를 선도하고, 자연과 함께하는 건강한 스포츠 문화를 만들어갑니다.",
+    "vision": "누구나 즐길 수 있는 트레일스포츠 환경 조성",
+    "leadership_title": "임원진"
+  },
+  "races": {
+    "title": "대회 일정",
+    "subtitle": "KTSA가 주관하는 트레일 대회 일정입니다.",
+    "filter_all": "전체",
+    "filter_upcoming": "예정",
+    "filter_past": "종료",
+    "apply": "신청하기",
+    "detail": "상세 보기",
+    "status_upcoming": "예정",
+    "status_open": "접수중",
+    "status_closed": "접수마감",
+    "status_finished": "종료"
+  },
+  "news": {
+    "title": "뉴스·공지",
+    "subtitle": "KTSA의 최신 소식을 전달합니다.",
+    "category_notice": "공지",
+    "category_news": "뉴스",
+    "category_result": "결과",
+    "read_more": "더 읽기"
+  },
+  "contact": {
+    "title": "문의",
+    "subtitle": "협회에 궁금한 점이 있으시면 언제든지 연락해 주세요.",
+    "address": "주소",
+    "phone": "전화",
+    "email": "이메일",
+    "form_name": "이름",
+    "form_email": "이메일",
+    "form_message": "문의 내용",
+    "form_submit": "보내기",
+    "form_placeholder_name": "이름을 입력하세요",
+    "form_placeholder_email": "이메일을 입력하세요",
+    "form_placeholder_message": "문의 내용을 입력하세요"
   },
   "common": {
     "more": "더 보기",
     "apply": "신청하기",
-    "language": "언어"
+    "language": "언어",
+    "korean": "한국어",
+    "english": "English",
+    "coming_soon": "준비중"
+  },
+  "footer": {
+    "association": "대한트레일스포츠협회 (KTSA)",
+    "copyright": "© 2025 Korea Trail Sports Association. All rights reserved.",
+    "privacy": "개인정보 처리방침"
   }
 }

@@ -10,12 +10,65 @@
   "home": {
     "hero_title": "Korea Trail Sports Association",
     "hero_subtitle": "For those who run through nature",
+    "hero_cta": "View Race Schedule",
     "upcoming_races": "Upcoming Races",
-    "latest_news": "Latest News"
+    "latest_news": "Latest News",
+    "view_all": "View All"
+  },
+  "about": {
+    "title": "About KTSA",
+    "history_title": "History",
+    "mission_title": "Mission & Vision",
+    "mission": "Leading trail sports culture in Korea, creating a healthy sports culture in harmony with nature.",
+    "vision": "Creating an environment where everyone can enjoy trail sports",
+    "leadership_title": "Leadership"
+  },
+  "races": {
+    "title": "Race Schedule",
+    "subtitle": "Official KTSA trail race calendar.",
+    "filter_all": "All",
+    "filter_upcoming": "Upcoming",
+    "filter_past": "Past",
+    "apply": "Apply",
+    "detail": "Details",
+    "status_upcoming": "Upcoming",
+    "status_open": "Open",
+    "status_closed": "Closed",
+    "status_finished": "Finished"
+  },
+  "news": {
+    "title": "News & Announcements",
+    "subtitle": "Latest updates from KTSA.",
+    "category_notice": "Notice",
+    "category_news": "News",
+    "category_result": "Result",
+    "read_more": "Read More"
+  },
+  "contact": {
+    "title": "Contact",
+    "subtitle": "Feel free to reach out anytime.",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email",
+    "form_name": "Name",
+    "form_email": "Email",
+    "form_message": "Message",
+    "form_submit": "Send",
+    "form_placeholder_name": "Enter your name",
+    "form_placeholder_email": "Enter your email",
+    "form_placeholder_message": "Enter your message"
   },
   "common": {
-    "more": "View More",
+    "more": "More",
     "apply": "Apply",
-    "language": "Language"
+    "language": "Language",
+    "korean": "한국어",
+    "english": "English",
+    "coming_soon": "Coming Soon"
+  },
+  "footer": {
+    "association": "Korea Trail Sports Association (KTSA)",
+    "copyright": "© 2025 Korea Trail Sports Association. All rights reserved.",
+    "privacy": "Privacy Policy"
   }
 }
