@@ -6,19 +6,13 @@ export default function AboutPage() {
   const locale = useLocale() as "ko" | "en";
 
   const history = locale === "ko" ? [
-    { year: "2010", event: "대한트레일스포츠협회 창립" },
-    { year: "2012", event: "첫 공식 대회 개최 — 설악 트레일 30K" },
-    { year: "2015", event: "국제 트레일러닝협회(ITRA) 정회원 가입" },
-    { year: "2018", event: "전국 10개 지부 설립" },
-    { year: "2020", event: "회원 수 5,000명 돌파" },
-    { year: "2023", event: "아시아 트레일 챔피언십 유치" },
+    { year: "2025. 11", event: "대한트레일스포츠협회 고유번호 취득 (비영리 사단법인)" },
+    { year: "2025. 12", event: "대한트레일스포츠협회 설립 · 사업자 등록" },
+    { year: "2026. 03", event: "공식 웹사이트 오픈" },
   ] : [
-    { year: "2010", event: "Founded Korea Trail Sports Association" },
-    { year: "2012", event: "First official race — Seorak Trail 30K" },
-    { year: "2015", event: "Joined ITRA as full member" },
-    { year: "2018", event: "Established 10 regional chapters" },
-    { year: "2020", event: "Reached 5,000 members" },
-    { year: "2023", event: "Hosted Asia Trail Championship" },
+    { year: "Nov 2025", event: "Registered as non-profit association (Unique No. acquired)" },
+    { year: "Dec 2025", event: "Korea Trail Sports Association officially founded" },
+    { year: "Mar 2026", event: "Official website launched" },
   ];
 
   return (
