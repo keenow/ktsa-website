@@ -76,13 +76,19 @@ export default function UpcomingRaces() {
               {/* 날짜·장소 */}
               <div className="space-y-1.5 mb-3">
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-[#1e3a6e] text-xs font-bold w-4 shrink-0">D</span>
+                  <svg className="w-4 h-4 shrink-0 text-[#1e3a6e]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <path d="M16 2v4M8 2v4M3 10h18" />
+                  </svg>
                   <span className={isOpen ? "text-gray-700 font-medium" : "text-gray-400"}>
                     {isKo ? race.date : race.dateEn}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-[#1e3a6e] text-xs font-bold w-4 shrink-0">L</span>
+                  <svg className="w-4 h-4 shrink-0 text-[#1e3a6e]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                    <path d="M12 21s-6-5.686-6-10a6 6 0 1 1 12 0c0 4.314-6 10-6 10z" />
+                    <circle cx="12" cy="11" r="2" />
+                  </svg>
                   <span className="text-gray-500">{isKo ? race.location : race.locationEn}</span>
                 </div>
               </div>
