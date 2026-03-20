@@ -19,48 +19,7 @@ type Race = {
 };
 
 const races: Race[] = [
-  // ── KOREA 50K ──────────────────────────────────────────
-  {
-    name: "2026 KOREA 50K 동두천 (DDC)",
-    nameEn: "2026 KOREA 50K Dongducheon (DDC)",
-    date: "2026년 4월 25일 (토)",
-    dateEn: "April 25, 2026 (Sat)",
-    location: "경기도 동두천",
-    locationEn: "Dongducheon, Gyeonggi",
-    courses: [
-      { name: "DDC50", distance: "50km" },
-      { name: "DDC20", distance: "20km" },
-      { name: "DDC10", distance: "10km" },
-      { name: "DDC5",  distance: "5km" },
-    ],
-    status: "접수마감",
-    statusEn: "Closed",
-    note: "추첨제 접수 마감",
-    noteEn: "Lottery registration closed",
-    url: "https://korea50k.com",
-    organizer: "JSCENO",
-  },
-  {
-    name: "2026 KOREA 50K 춘천 (CC)",
-    nameEn: "2026 KOREA 50K Chuncheon (CC)",
-    date: "2026년 6월 (날짜 미정)",
-    dateEn: "June 2026 (TBD)",
-    location: "강원도 춘천",
-    locationEn: "Chuncheon, Gangwon",
-    courses: [
-      { name: "CC50",          distance: "50km" },
-      { name: "CC20 SKYRACE®", distance: "20km" },
-      { name: "CC15",          distance: "15km" },
-    ],
-    status: "추가접수",
-    statusEn: "Limited",
-    note: "취소분 추가 접수 · 4월 16일(목) 12:00 선착순",
-    noteEn: "Additional registration Apr 16 (Thu) 12:00, first-come first-served",
-    url: "https://korea50k.com",
-    organizer: "JSCENO",
-  },
-
-  // ── 락앤런 ─────────────────────────────────────────────
+  // ── 4월 3일 ────────────────────────────────────────────
   {
     name: "2026 장수 트레일 레이스",
     nameEn: "2026 Jangsu Trail Race",
@@ -84,7 +43,29 @@ const races: Race[] = [
     organizer: "락앤런",
   },
 
-  // ── 에코라인 / 태백화점 ────────────────────────────────
+  // ── 4월 25일 ───────────────────────────────────────────
+  {
+    name: "2026 KOREA 50K 동두천 (DDC)",
+    nameEn: "2026 KOREA 50K Dongducheon (DDC)",
+    date: "2026년 4월 25일 (토)",
+    dateEn: "April 25, 2026 (Sat)",
+    location: "경기도 동두천",
+    locationEn: "Dongducheon, Gyeonggi",
+    courses: [
+      { name: "DDC50", distance: "50km" },
+      { name: "DDC20", distance: "20km" },
+      { name: "DDC10", distance: "10km" },
+      { name: "DDC5",  distance: "5km" },
+    ],
+    status: "접수마감",
+    statusEn: "Closed",
+    note: "추첨제 접수 마감",
+    noteEn: "Lottery registration closed",
+    url: "https://korea50k.com",
+    organizer: "JSCENO",
+  },
+
+  // ── 봄 (날짜 미정) ─────────────────────────────────────
   {
     name: "2026 BTC 베어트레일캠프 — 킹스로드 영월",
     nameEn: "2026 B.T.C Bear Trail Camp — Kings Road Yeongwol",
@@ -98,6 +79,29 @@ const races: Race[] = [
     url: "https://m.eco-line.co.kr",
     organizer: "에코라인",
   },
+
+  // ── 6월 ───────────────────────────────────────────────
+  {
+    name: "2026 KOREA 50K 춘천 (CC)",
+    nameEn: "2026 KOREA 50K Chuncheon (CC)",
+    date: "2026년 6월 (날짜 미정)",
+    dateEn: "June 2026 (TBD)",
+    location: "강원도 춘천",
+    locationEn: "Chuncheon, Gangwon",
+    courses: [
+      { name: "CC50",          distance: "50km" },
+      { name: "CC20 SKYRACE®", distance: "20km" },
+      { name: "CC15",          distance: "15km" },
+    ],
+    status: "추가접수",
+    statusEn: "Limited",
+    note: "취소분 추가 접수 · 4월 16일(목) 12:00 선착순",
+    noteEn: "Additional registration Apr 16 (Thu) 12:00, first-come first-served",
+    url: "https://korea50k.com",
+    organizer: "JSCENO",
+  },
+
+  // ── 여름 ──────────────────────────────────────────────
   {
     name: "2026 다이나핏 태백 트레일",
     nameEn: "2026 Dynafit Taebaek Trail",
@@ -116,6 +120,8 @@ const races: Race[] = [
     url: "https://m.eco-line.co.kr",
     organizer: "에코라인",
   },
+
+  // ── 하반기 ────────────────────────────────────────────
   {
     name: "2026 레전드 트레일 문경",
     nameEn: "2026 Legend Trail Mungyeong",
