@@ -10,10 +10,11 @@ export default function ContactPage() {
       <div className="w-12 h-1 bg-[#1e3a6e] mb-12"></div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        {/* Contact Info */}
+        {/* 연락처 */}
         <div>
           <h2 className="text-lg font-semibold text-gray-800 mb-6">Contact Info</h2>
           <div className="space-y-4">
+            {/* 주소 */}
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-[#e8edf5] rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                 <svg className="w-4 h-4 text-[#1e3a6e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -23,20 +24,11 @@ export default function ContactPage() {
               </div>
               <div>
                 <p className="text-xs text-gray-400 mb-0.5">{t("address")}</p>
-                <p className="text-sm text-gray-700">서울특별시 마포구 (TBD)</p>
+                <p className="text-sm text-gray-700">서울특별시 용산구 두텁바위로69길 4, 101호 (후암동)</p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 bg-[#e8edf5] rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                <svg className="w-4 h-4 text-[#1e3a6e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-xs text-gray-400 mb-0.5">{t("phone")}</p>
-                <p className="text-sm text-gray-700">02-000-0000 (TBD)</p>
-              </div>
-            </div>
+
+            {/* 이메일 */}
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 bg-[#e8edf5] rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
                 <svg className="w-4 h-4 text-[#1e3a6e]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,13 +37,13 @@ export default function ContactPage() {
               </div>
               <div>
                 <p className="text-xs text-gray-400 mb-0.5">{t("email")}</p>
-                <p className="text-sm text-gray-700">info@ktsa.or.kr (TBD)</p>
+                <p className="text-sm text-gray-400 italic">준비 중</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Contact Form */}
+        {/* 문의 양식 */}
         <div>
           <h2 className="text-lg font-semibold text-gray-800 mb-6">{t("form_message")}</h2>
           <form className="space-y-4">
@@ -60,7 +52,7 @@ export default function ContactPage() {
               <input
                 type="text"
                 placeholder={t("form_placeholder_name")}
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e8edf5]0 focus:border-transparent"
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e8edf5] focus:border-transparent"
               />
             </div>
             <div>
@@ -68,7 +60,7 @@ export default function ContactPage() {
               <input
                 type="email"
                 placeholder={t("form_placeholder_email")}
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e8edf5]0 focus:border-transparent"
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e8edf5] focus:border-transparent"
               />
             </div>
             <div>
@@ -76,7 +68,7 @@ export default function ContactPage() {
               <textarea
                 rows={5}
                 placeholder={t("form_placeholder_message")}
-                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e8edf5]0 focus:border-transparent resize-none"
+                className="w-full border border-gray-200 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#e8edf5] focus:border-transparent resize-none"
               />
             </div>
             <button
