@@ -21,7 +21,11 @@
     "mission_title": "Mission & Vision",
     "mission": "Leading trail sports culture in Korea, creating a healthy sports culture in harmony with nature.",
     "vision": "Creating an environment where everyone can enjoy trail sports",
-    "leadership_title": "Leadership"
+    "leadership_title": "Leadership",
+    "leadership_governance": "Governance",
+    "leadership_officers": "Executive officers",
+    "leadership_board": "Directors & auditor",
+    "leadership_committees_heading": "Committees & operational bodies"
   },
   "races": {
     "title": "Race Schedule",

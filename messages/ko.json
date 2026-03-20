@@ -21,7 +21,11 @@
     "mission_title": "미션 & 비전",
     "mission": "대한민국 트레일스포츠 문화를 선도하고, 자연과 함께하는 건강한 스포츠 문화를 만들어갑니다.",
     "vision": "누구나 즐길 수 있는 트레일스포츠 환경 조성",
-    "leadership_title": "임원진"
+    "leadership_title": "임원진",
+    "leadership_governance": "거버넌스",
+    "leadership_officers": "주요 임원",
+    "leadership_board": "이사 · 감사",
+    "leadership_committees_heading": "위원회 및 운영기구"
   },
   "races": {
     "title": "대회 일정",
