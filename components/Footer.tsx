@@ -8,40 +8,29 @@ export default function Footer() {
 
   return (
     <footer className="bg-gray-900 text-gray-300 mt-16">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Brand */}
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 bg-[#1e3a6e] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">K</span>
-              </div>
-              <span className="font-bold text-white text-lg">KTSA</span>
-            </div>
-            <p className="text-sm text-gray-400">{t("association")}</p>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+          {/* 법인 정보 */}
+          <div className="space-y-1 text-sm text-gray-400">
+            <p className="font-semibold text-white mb-2">{t("association")}</p>
+            <p>{t("representative")}</p>
+            <p>{t("address")}</p>
+            <p>{t("reg_number")}</p>
           </div>
 
-          {/* Links */}
+          {/* 메뉴 */}
           <div>
-            <h3 className="text-white font-semibold mb-3 text-sm">Menu</h3>
-            <ul className="space-y-2 text-sm">
+            <ul className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
               <li><Link href={`/${locale}/about`} className="hover:text-white transition-colors">{tc("about")}</Link></li>
               <li><Link href={`/${locale}/races`} className="hover:text-white transition-colors">{tc("races")}</Link></li>
               <li><Link href={`/${locale}/news`} className="hover:text-white transition-colors">{tc("news")}</Link></li>
               <li><Link href={`/${locale}/contact`} className="hover:text-white transition-colors">{tc("contact")}</Link></li>
             </ul>
           </div>
-
-          {/* Legal */}
-          <div>
-            <h3 className="text-white font-semibold mb-3 text-sm">Legal</h3>
-            <ul className="space-y-2 text-sm">
-              <li><Link href={`/${locale}/privacy`} className="hover:text-white transition-colors">{t("privacy")}</Link></li>
-            </ul>
-          </div>
         </div>
 
-        <div className="border-t border-gray-800 mt-8 pt-6 text-sm text-gray-500 text-center">
+        <div className="border-t border-gray-800 mt-8 pt-6 text-xs text-gray-600 text-center">
           {t("copyright")}
         </div>
       </div>
