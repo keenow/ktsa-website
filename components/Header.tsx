@@ -57,7 +57,7 @@ export default function Header() {
           </nav>
 
           {/* Language Toggle + Mobile Menu */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
               <button
                 onClick={() => switchLocale("ko")}
@@ -80,6 +80,14 @@ export default function Header() {
                 EN
               </button>
             </div>
+
+            {/* 로그인 버튼 */}
+            <Link
+              href={`/${locale}/my/login`}
+              className="hidden md:inline-block text-xs border border-[#1e3a6e] text-[#1e3a6e] px-3 py-1.5 rounded-lg hover:bg-[#1e3a6e] hover:text-white transition-colors"
+            >
+              {locale === "ko" ? "로그인" : "Sign In"}
+            </Link>
 
             {/* Mobile menu toggle */}
             <button
