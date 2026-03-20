@@ -1,64 +1,24 @@
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
+import { getUpcomingRaces } from "@/content/races-data";
 
-function RaceCard({ name, date, location, courses, status }: {
-  name: string; date: string; location: string; courses: string; status: string;
-}) {
-  const statusColors: Record<string, string> = {
-    "접수마감": "bg-gray-100 text-gray-500",
-    "추가접수": "bg-[#dde3f0] text-[#1e3a6e]",
-    "Closed": "bg-gray-100 text-gray-500",
-    "Limited": "bg-[#dde3f0] text-[#1e3a6e]",
-  };
-  return (
-    <div className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-3">
-        <span className={`text-xs font-medium px-2 py-1 rounded-full ${statusColors[status] || "bg-gray-100 text-gray-600"}`}>{status}</span>
-        <span className="text-xs text-gray-400">{courses}</span>
-      </div>
-      <h3 className="font-semibold text-gray-900 mb-1">{name}</h3>
-      <p className="text-sm text-gray-500">📅 {date}</p>
-      <p className="text-sm text-gray-400">📍 {location}</p>
-    </div>
-  );
-}
+const statusColors: Record<string, string> = {
+  "접수마감": "bg-gray-100 text-gray-500",
+  "추가접수": "bg-[#dde3f0] text-[#1e3a6e]",
+  "접수중":   "bg-[#1e3a6e] text-white",
+  "예정":     "bg-blue-50 text-blue-700",
+  "Closed":   "bg-gray-100 text-gray-500",
+  "Limited":  "bg-[#dde3f0] text-[#1e3a6e]",
+  "Open":     "bg-[#1e3a6e] text-white",
+  "Upcoming": "bg-blue-50 text-blue-700",
+};
 
 export default function HomePage() {
   const t = useTranslations("home");
   const locale = useLocale();
   const isKo = locale === "ko";
 
-  const races = isKo ? [
-    {
-      name: "2026 KOREA 50K 동두천 (DDC)",
-      date: "2026년 4월 25일 (토)",
-      location: "경기도 동두천",
-      courses: "50K / 20K / 10K / 5K",
-      status: "접수마감",
-    },
-    {
-      name: "2026 KOREA 50K 춘천 (CC)",
-      date: "2026년 6월 (예정)",
-      location: "강원도 춘천",
-      courses: "50K / 20K SKYRACE® / 15K",
-      status: "추가접수",
-    },
-  ] : [
-    {
-      name: "2026 KOREA 50K Dongducheon (DDC)",
-      date: "April 25, 2026 (Sat)",
-      location: "Dongducheon, Gyeonggi",
-      courses: "50K / 20K / 10K / 5K",
-      status: "Closed",
-    },
-    {
-      name: "2026 KOREA 50K Chuncheon (CC)",
-      date: "June 2026 (TBD)",
-      location: "Chuncheon, Gangwon",
-      courses: "50K / 20K SKYRACE® / 15K",
-      status: "Limited",
-    },
-  ];
+  const upcoming = getUpcomingRaces(2);
 
   return (
     <>
@@ -83,7 +43,26 @@ export default function HomePage() {
           <Link href={`/${locale}/races`} className="text-sm text-[#1e3a6e] hover:underline">{t("view_all")} →</Link>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
-          {races.map((race, i) => <RaceCard key={i} {...race} />)}
+          {upcoming.map((race, i) => (
+            <div key={i} className="border border-gray-200 rounded-xl p-5 hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between mb-3 flex-wrap gap-2">
+                <span className={`text-xs font-medium px-2 py-1 rounded-full ${statusColors[isKo ? race.status : race.statusEn] || "bg-gray-100 text-gray-600"}`}>
+                  {isKo ? race.status : race.statusEn}
+                </span>
+                {race.organizer && (
+                  <span className="text-xs text-gray-400">{race.organizer}</span>
+                )}
+              </div>
+              <h3 className="font-semibold text-gray-900 mb-1">{isKo ? race.name : race.nameEn}</h3>
+              <p className="text-sm text-gray-500">📅 {isKo ? race.date : race.dateEn}</p>
+              <p className="text-sm text-gray-400">📍 {isKo ? race.location : race.locationEn}</p>
+              {race.courses.length > 0 && (
+                <p className="text-xs text-gray-400 mt-2">
+                  {race.courses.map(c => c.name).join(" / ")}
+                </p>
+              )}
+            </div>
+          ))}
         </div>
       </section>
 
