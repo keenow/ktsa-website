@@ -54,7 +54,7 @@ export const boardMembers: OrgMember[] = [
     role: { ko: "이사", en: "Director" },
     name: "김홍일",
     nameEn: "Kim Hong-il",
-    org: { ko: "제이쎄노 감독", en: "Director, Jaysseno" },
+    org: { ko: "제이쎄노 감독", en: "Director, JSCENO" },
   },
   {
     role: { ko: "이사", en: "Director" },
@@ -83,7 +83,7 @@ export const president: OrgMember = {
   role: { ko: "회장", en: "President" },
   name: "장지윤",
   nameEn: "Jang Ji-yun",
-  org: { ko: "제이쎄노 대표", en: "CEO, Jaysseno" },
+  org: { ko: "제이쎄노 대표", en: "CEO, JSCENO" },
   color: "orange",
 };
 
@@ -119,7 +119,7 @@ export const secretaryGeneral: OrgMember = {
 export const treasurer: OrgMember = {
   role: { ko: "재무이사", en: "Treasurer" },
   name: "이승현",
-  nameEn: "Lee Seung-hyeon",
+  nameEn: "Lee Seunghyun",
   org: { ko: "트레일서비스 대표", en: "CEO, Trail Service" },
   color: "amber",
 };
