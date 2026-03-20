@@ -21,10 +21,10 @@ export default function NewsPage() {
 
   const categoryColors: Record<string, string> = {
     "공지": "bg-blue-50 text-blue-700",
-    "뉴스": "bg-green-50 text-green-700",
+    "뉴스": "bg-[#e8edf5] text-[#152d57]",
     "결과": "bg-orange-50 text-orange-700",
     "Notice": "bg-blue-50 text-blue-700",
-    "News": "bg-green-50 text-green-700",
+    "News": "bg-[#e8edf5] text-[#152d57]",
     "Result": "bg-orange-50 text-orange-700",
   };
 
@@ -32,7 +32,7 @@ export default function NewsPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
       <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("title")}</h1>
       <p className="text-gray-500 mb-2">{t("subtitle")}</p>
-      <div className="w-12 h-1 bg-green-600 mb-10"></div>
+      <div className="w-12 h-1 bg-[#1e3a6e] mb-10"></div>
 
       <div className="space-y-0 divide-y divide-gray-100">
         {items.map((item, i) => (

@@ -3,6 +3,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --brand-navy: #1e3a6e;
+  --brand-navy-dark: #152d57;
+  --brand-navy-light: #2a4f8f;
+  --brand-grey: #6b7280;
+  --brand-grey-light: #f3f4f6;
 }
 
 @theme inline {

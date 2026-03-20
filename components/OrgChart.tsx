@@ -26,11 +26,11 @@ interface OrgChartProps {
 
 const colorMap: Record<OrgColor, string> = {
   navy:  "bg-[#1e3a6e] text-white border-[#1e3a6e]",
-  green: "bg-[#2d6a4f] text-white border-[#2d6a4f]",
-  orange:"bg-[#e07b39] text-white border-[#e07b39]",
-  amber: "bg-[#d4842a] text-white border-[#d4842a]",
-  teal:  "bg-[#2a7f7f] text-white border-[#2a7f7f]",
-  slate: "bg-slate-600  text-white border-slate-600",
+  green: "bg-[#2a4f8f] text-white border-[#2a4f8f]",
+  orange:"bg-[#4b6fa8] text-white border-[#4b6fa8]",
+  amber: "bg-[#6b7280] text-white border-[#6b7280]",
+  teal:  "bg-[#374e6e] text-white border-[#374e6e]",
+  slate: "bg-slate-500 text-white border-slate-500",
 };
 
 // ─── 헬퍼 ──────────────────────────────────────

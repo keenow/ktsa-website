@@ -20,11 +20,11 @@ export default function RacesPage() {
   ];
 
   const statusColors: Record<string, string> = {
-    "접수중": "bg-green-100 text-green-700",
+    "접수중": "bg-[#dde3f0] text-[#152d57]",
     "예정": "bg-blue-100 text-blue-700",
     "접수마감": "bg-orange-100 text-orange-700",
     "종료": "bg-gray-100 text-gray-500",
-    "Open": "bg-green-100 text-green-700",
+    "Open": "bg-[#dde3f0] text-[#152d57]",
     "Upcoming": "bg-blue-100 text-blue-700",
     "Closed": "bg-orange-100 text-orange-700",
     "Finished": "bg-gray-100 text-gray-500",
@@ -34,14 +34,14 @@ export default function RacesPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16">
       <h1 className="text-3xl font-bold text-gray-900 mb-2">{t("title")}</h1>
       <p className="text-gray-500 mb-2">{t("subtitle")}</p>
-      <div className="w-12 h-1 bg-green-600 mb-10"></div>
+      <div className="w-12 h-1 bg-[#1e3a6e] mb-10"></div>
 
       {/* Filter Tabs */}
       <div className="flex gap-2 mb-8">
         {[t("filter_all"), t("filter_upcoming"), t("filter_past")].map((label) => (
           <button
             key={label}
-            className="px-4 py-1.5 text-sm rounded-full border border-gray-200 text-gray-600 hover:border-green-600 hover:text-green-600 transition-colors first:bg-green-600 first:text-white first:border-green-600"
+            className="px-4 py-1.5 text-sm rounded-full border border-gray-200 text-gray-600 hover:border-[#1e3a6e] hover:text-[#1e3a6e] transition-colors first:bg-[#1e3a6e] first:text-white first:border-[#1e3a6e]"
           >
             {label}
           </button>
@@ -68,7 +68,7 @@ export default function RacesPage() {
                 </div>
               </div>
               <div>
-                <button className="w-full sm:w-auto bg-green-600 text-white text-sm px-5 py-2 rounded-lg hover:bg-green-700 transition-colors">
+                <button className="w-full sm:w-auto bg-[#1e3a6e] text-white text-sm px-5 py-2 rounded-lg hover:bg-[#152d57] transition-colors">
                   {t("detail")}
                 </button>
               </div>

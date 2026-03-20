@@ -13,7 +13,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#1e3a6e] rounded-full flex items-center justify-center">
                 <span className="text-white font-bold text-sm">K</span>
               </div>
               <span className="font-bold text-white text-lg">KTSA</span>

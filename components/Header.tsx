@@ -49,7 +49,7 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="text-sm text-gray-600 hover:text-green-600 transition-colors"
+                className="text-sm text-gray-600 hover:text-[#1e3a6e] transition-colors"
               >
                 {link.label}
               </Link>
@@ -63,7 +63,7 @@ export default function Header() {
                 onClick={() => switchLocale("ko")}
                 className={`px-3 py-1.5 transition-colors ${
                   locale === "ko"
-                    ? "bg-green-600 text-white"
+                    ? "bg-[#1e3a6e] text-white"
                     : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
@@ -73,7 +73,7 @@ export default function Header() {
                 onClick={() => switchLocale("en")}
                 className={`px-3 py-1.5 transition-colors ${
                   locale === "en"
-                    ? "bg-green-600 text-white"
+                    ? "bg-[#1e3a6e] text-white"
                     : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
