@@ -36,9 +36,7 @@ const colorMap: Record<OrgColor, string> = {
 // ─── 헬퍼 ──────────────────────────────────────
 
 function memberLabel(m: OrgMember, locale: Locale): string {
-  const name = locale === "en" && m.nameEn ? m.nameEn : m.name;
-  const org  = m.org[locale];
-  return `${name} (${org})`;
+  return locale === "en" && m.nameEn ? m.nameEn : m.name;
 }
 
 function roleLabel(m: OrgMember, locale: Locale): string {
