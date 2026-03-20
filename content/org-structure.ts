@@ -54,7 +54,7 @@ export const boardMembers: OrgMember[] = [
     role: { ko: "이사", en: "Director" },
     name: "김홍일",
     nameEn: "Kim Hong-il",
-    org: { ko: "제이베노 감독", en: "Director, Jaybeno" },
+    org: { ko: "제이쎄노 감독", en: "Director, Jaysseno" },
   },
   {
     role: { ko: "이사", en: "Director" },
@@ -83,7 +83,7 @@ export const president: OrgMember = {
   role: { ko: "회장", en: "President" },
   name: "장지윤",
   nameEn: "Jang Ji-yun",
-  org: { ko: "제이베노 대표", en: "CEO, Jaybeno" },
+  org: { ko: "제이쎄노 대표", en: "CEO, Jaysseno" },
   color: "orange",
 };
 
