@@ -72,7 +72,7 @@ export const boardMembers: OrgMember[] = [
     role: { ko: "감사", en: "Auditor" },
     name: "조상희",
     nameEn: "Jo Sang-hee",
-    org: { ko: "㈜산악연맹 차장", en: "Deputy Director, Alpine Federation" },
+    org: { ko: "(전)산악연맹 차장", en: "Former Deputy Director, Alpine Federation" },
   },
 ];
 
