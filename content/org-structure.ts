@@ -129,7 +129,7 @@ export const treasurer: OrgMember = {
 
 export const committees: Committee[] = [
   {
-    name: { ko: "대회 의료 위원회", en: "Race Medic Committee" },
+    name: { ko: "레이스 메딕 위원회", en: "Race Medic Committee" },
   },
   {
     name: { ko: "TROF (트레일러닝 대회 조직포럼)", en: "TROF (Trail Running Organiser Forum)" },
