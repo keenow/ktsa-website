@@ -8,10 +8,12 @@ export default function AboutPage() {
   const history = locale === "ko" ? [
     { year: "2025. 11", event: "대한트레일스포츠협회 고유번호 취득 (비영리 사단법인)" },
     { year: "2025. 12", event: "대한트레일스포츠협회 설립 · 사업자 등록" },
+    { year: "2026. 03. 14", event: "임시총회 개최 및 초대 임원 선출" },
     { year: "2026. 03", event: "공식 웹사이트 오픈" },
   ] : [
     { year: "Nov 2025", event: "Registered as non-profit association (Unique No. acquired)" },
     { year: "Dec 2025", event: "Korea Trail Sports Association officially founded" },
+    { year: "Mar 14, 2026", event: "Inaugural General Assembly & Executive Officers Elected" },
     { year: "Mar 2026", event: "Official website launched" },
   ];
 
