@@ -60,13 +60,13 @@ export const boardMembers: OrgMember[] = [
     role: { ko: "이사", en: "Director" },
     name: "장재훈",
     nameEn: "Jang Jae-hun",
-    org: { ko: "대백화점 대표", en: "CEO, Daebaek" },
+    org: { ko: "태백화점 대표", en: "CEO, Taebaek" },
   },
   {
     role: { ko: "이사", en: "Director" },
     name: "최창휴",
     nameEn: "Choi Chang-hyu",
-    org: { ko: "김병원 의사", en: "Physician, Kim Hospital" },
+    org: { ko: "길병원 의사", en: "Physician, Gil Hospital" },
   },
   {
     role: { ko: "감사", en: "Auditor" },
