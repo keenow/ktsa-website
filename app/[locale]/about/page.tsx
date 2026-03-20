@@ -1,9 +1,16 @@
 import { useTranslations, useLocale } from "next-intl";
 import Image from "next/image";
+import {
+  executives,
+  getExecutiveName,
+  getExecutiveTitle,
+  getOrgChartAlt,
+  leadershipOrgChart,
+} from "@/content/leadership";
 
 export default function AboutPage() {
   const t = useTranslations("about");
-  const locale = useLocale();
+  const locale = useLocale() as "ko" | "en";
 
   const history = locale === "ko" ? [
     { year: "2010", event: "대한트레일스포츠협회 창립" },
@@ -55,19 +62,36 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Leadership — Org Chart Image */}
+      {/* Leadership — 설정: content/leadership.ts */}
       <section>
         <h2 className="text-xl font-bold text-gray-800 mb-6">{t("leadership_title")}</h2>
         <div className="rounded-xl overflow-hidden border border-gray-100 shadow-sm">
           <Image
-            src="/org-chart.png"
-            alt="KTSA 조직도 — Korea Trail Sports Association Organizational Structure"
-            width={1200}
-            height={675}
+            src={leadershipOrgChart.imageSrc}
+            alt={getOrgChartAlt(locale)}
+            width={leadershipOrgChart.width}
+            height={leadershipOrgChart.height}
             className="w-full h-auto"
             priority
           />
         </div>
+        {executives.length > 0 && (
+          <ul className="mt-8 grid gap-3 sm:grid-cols-2">
+            {executives.map((exec, index) => (
+              <li
+                key={`exec-${index}`}
+                className="flex flex-col rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 text-sm"
+              >
+                <span className="text-xs font-medium text-green-700">
+                  {getExecutiveTitle(exec, locale)}
+                </span>
+                <span className="mt-1 font-semibold text-gray-900">
+                  {getExecutiveName(exec, locale)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
     </div>
   );
