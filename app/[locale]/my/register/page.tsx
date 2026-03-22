@@ -109,8 +109,8 @@ export default function RegisterPage() {
 
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
           {/* 준회원 안내 */}
-          <div className="flex items-center gap-2 bg-[#f0f3f9] border border-[#1e3a6e]/20 rounded-lg px-3 py-2.5 mb-6">
-            <span className="text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+          <div className="flex items-start gap-2 bg-[#f0f3f9] border border-[#1e3a6e]/20 rounded-lg px-3 py-2.5 mb-6">
+            <span className="text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 mt-0.5">
               {isKo ? '준회원' : 'Associate'}
             </span>
             <p className="text-xs text-gray-600">
@@ -123,7 +123,7 @@ export default function RegisterPage() {
           </h1>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {isKo ? '이름' : 'Name'} <span className="text-red-400">*</span>
