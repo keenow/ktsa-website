@@ -6,6 +6,7 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/ko'
+  const type = searchParams.get('type')
 
   if (code) {
     const cookieStore = await cookies()
@@ -31,6 +32,11 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && data.user) {
+      // 비밀번호 재설정 플로우 — 프로필 생성 건너뜀
+      if (type === 'recovery') {
+        return NextResponse.redirect(`${origin}/ko/my/reset-password`)
+      }
+
       // 소셜 로그인 시 profiles 레코드가 없으면 자동 생성
       const { data: existing } = await supabase
         .from('profiles')

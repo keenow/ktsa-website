@@ -3,13 +3,15 @@
 import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { useState } from 'react'
-import { signInWithEmail, signInWithOAuth } from '../actions'
+import { signInWithEmail, signInWithOAuth, resetPasswordWithEmail } from '../actions'
 
 export default function LoginPage() {
   const locale = useLocale()
   const isKo = locale === 'ko'
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [mode, setMode] = useState<'login' | 'forgot'>('login')
+  const [resetSent, setResetSent] = useState(false)
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -25,6 +27,100 @@ export default function LoginPage() {
     setLoading(true)
     await signInWithOAuth(provider)
     setLoading(false)
+  }
+
+  async function handleReset(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    const formData = new FormData(e.currentTarget)
+    const result = await resetPasswordWithEmail(formData)
+    if (result?.error) setError(result.error)
+    else setResetSent(true)
+    setLoading(false)
+  }
+
+  // 비밀번호 재설정 이메일 발송 완료
+  if (resetSent) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="w-full max-w-sm bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center">
+          <div className="text-4xl mb-4">📨</div>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">
+            {isKo ? '재설정 링크를 발송했습니다' : 'Reset link sent'}
+          </h2>
+          <p className="text-sm text-gray-500 mb-6">
+            {isKo ? '이메일을 확인하고 링크를 클릭해주세요.' : 'Check your email and click the link.'}
+          </p>
+          <button
+            onClick={() => { setMode('login'); setResetSent(false) }}
+            className="text-sm text-[#1e3a6e] font-semibold hover:underline"
+          >
+            {isKo ? '로그인으로 돌아가기' : 'Back to login'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // 비밀번호 찾기 폼
+  if (mode === 'forgot') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="w-full max-w-sm">
+          <div className="text-center mb-8">
+            <Link href={`/${locale}`}>
+              <span className="text-2xl font-bold text-[#1e3a6e]">KTSA</span>
+            </Link>
+            <p className="text-sm text-gray-400 mt-1">
+              {isKo ? '대한트레일스포츠협회' : 'Korea Trail Sports Association'}
+            </p>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+            <h1 className="text-xl font-bold text-gray-900 mb-2">
+              {isKo ? '비밀번호 찾기' : 'Reset Password'}
+            </h1>
+            <p className="text-sm text-gray-500 mb-6">
+              {isKo ? '가입한 이메일로 재설정 링크를 보내드립니다.' : "We'll send a reset link to your email."}
+            </p>
+            <form className="space-y-4" onSubmit={handleReset}>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {isKo ? '이메일' : 'Email'}
+                </label>
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  placeholder="example@email.com"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a6e] focus:border-transparent"
+                />
+              </div>
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                  <p className="text-red-600 text-xs">{error}</p>
+                </div>
+              )}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#1e3a6e] text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-[#152d57] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {loading ? '...' : isKo ? '재설정 링크 보내기' : 'Send Reset Link'}
+              </button>
+            </form>
+          </div>
+          <p className="text-center text-sm text-gray-500 mt-4">
+            <button
+              onClick={() => { setMode('login'); setError(null) }}
+              className="text-[#1e3a6e] font-semibold hover:underline"
+            >
+              {isKo ? '← 로그인으로 돌아가기' : '← Back to login'}
+            </button>
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -66,7 +162,11 @@ export default function LoginPage() {
                 <label className="block text-sm font-medium text-gray-700">
                   {isKo ? '비밀번호' : 'Password'}
                 </label>
-                <button type="button" className="text-xs text-[#1e3a6e] hover:underline">
+                <button
+                  type="button"
+                  onClick={() => { setMode('forgot'); setError(null) }}
+                  className="text-xs text-[#1e3a6e] hover:underline"
+                >
                   {isKo ? '비밀번호 찾기' : 'Forgot password?'}
                 </button>
               </div>
