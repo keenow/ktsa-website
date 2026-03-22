@@ -93,6 +93,18 @@ export async function resetPasswordWithEmail(formData: FormData) {
   const email = formData.get('email') as string
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://trailkorea.org'
 
+  // 이메일 존재 여부 먼저 확인 (profiles 테이블)
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle()
+
+  if (profileError) return { error: profileError.message }
+  if (!profile) {
+    return { error: '가입되지 않은 이메일입니다. 이메일 주소를 다시 확인해주세요.' }
+  }
+
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: `${siteUrl}/auth/callback?next=/ko/my/reset-password`,
   })

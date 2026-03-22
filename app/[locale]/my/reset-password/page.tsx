@@ -13,6 +13,8 @@ export default function ResetPasswordPage() {
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    setError(null)
+
     const formData = new FormData(e.currentTarget)
     const password = formData.get('password') as string
     const confirm = formData.get('confirm') as string
@@ -27,16 +29,18 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true)
-    setError(null)
     const result = await updatePassword(formData)
-    if (result?.error) setError(result.error)
-    setLoading(false)
+    if (result?.error) {
+      setError(result.error)
+      setLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
 
+        {/* 로고 */}
         <div className="text-center mb-8">
           <Link href={`/${locale}`}>
             <span className="text-2xl font-bold text-[#1e3a6e]">KTSA</span>
@@ -51,7 +55,7 @@ export default function ResetPasswordPage() {
             {isKo ? '새 비밀번호 설정' : 'Set New Password'}
           </h1>
           <p className="text-sm text-gray-500 mb-6">
-            {isKo ? '새로운 비밀번호를 입력해주세요.' : 'Enter your new password below.'}
+            {isKo ? '새로 사용할 비밀번호를 입력해주세요.' : 'Enter your new password below.'}
           </p>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
@@ -76,7 +80,7 @@ export default function ResetPasswordPage() {
                 name="confirm"
                 type="password"
                 required
-                placeholder={isKo ? '동일하게 입력' : 'Repeat password'}
+                placeholder={isKo ? '동일하게 입력' : 'Re-enter password'}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a6e] focus:border-transparent"
               />
             </div>
@@ -90,16 +94,16 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#1e3a6e] text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-[#152d57] transition-colors disabled:opacity-40 disabled:cursor-not-allowed mt-1"
+              className="w-full bg-[#1e3a6e] text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-[#152d57] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {loading ? '...' : isKo ? '비밀번호 변경' : 'Update Password'}
+              {loading ? '...' : isKo ? '비밀번호 변경' : 'Change Password'}
             </button>
           </form>
         </div>
 
         <p className="text-center text-sm text-gray-500 mt-4">
           <Link href={`/${locale}/my/login`} className="text-[#1e3a6e] font-semibold hover:underline">
-            {isKo ? '← 로그인으로 돌아가기' : '← Back to login'}
+            {isKo ? '← 로그인으로 돌아가기' : '← Back to sign in'}
           </Link>
         </p>
       </div>
