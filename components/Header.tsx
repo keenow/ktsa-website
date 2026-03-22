@@ -81,6 +81,14 @@ export default function Header() {
               </button>
             </div>
 
+            {/* 회원가입 버튼 */}
+            <Link
+              href={`/${locale}/my/register`}
+              className="hidden md:inline-block text-xs bg-[#1e3a6e] text-white px-3 py-1.5 rounded-lg hover:bg-[#16305c] transition-colors"
+            >
+              {locale === "ko" ? "회원가입" : "Sign Up"}
+            </Link>
+
             {/* 로그인 버튼 */}
             <Link
               href={`/${locale}/my/login`}
@@ -118,6 +126,22 @@ export default function Header() {
                 {link.label}
               </Link>
             ))}
+            <div className="border-t border-gray-100 mt-2 pt-2 flex flex-col gap-1">
+              <Link
+                href={`/${locale}/my/register`}
+                className="px-2 py-2 text-sm font-medium text-white bg-[#1e3a6e] rounded text-center"
+                onClick={() => setMenuOpen(false)}
+              >
+                {locale === "ko" ? "회원가입" : "Sign Up"}
+              </Link>
+              <Link
+                href={`/${locale}/my/login`}
+                className="px-2 py-2 text-sm text-[#1e3a6e] border border-[#1e3a6e] rounded text-center"
+                onClick={() => setMenuOpen(false)}
+              >
+                {locale === "ko" ? "로그인" : "Sign In"}
+              </Link>
+            </div>
           </nav>
         )}
       </div>
