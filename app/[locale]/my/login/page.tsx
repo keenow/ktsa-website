@@ -102,7 +102,7 @@ export default function LoginPage() {
           </div>
 
           {/* 소셜 로그인 */}
-          <div className="space-y-2">
+          <div className="flex flex-col gap-2">
             <button
               type="button"
               onClick={() => handleOAuth('google')}
