@@ -78,7 +78,7 @@ export default function RegisterPage() {
         {/* 소셜 가입 */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-3">
           <p className="text-xs text-gray-400 text-center mb-3">{isKo ? '소셜 계정으로 빠르게 가입' : 'Quick sign up with'}</p>
-          <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2">
+          <div className="flex flex-col gap-2">
             <button
               type="button"
               onClick={() => handleOAuth('google')}
