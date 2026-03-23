@@ -40,7 +40,7 @@ export const leadershipOfficers: OrgMember[] = [
     titleEn: "President",
     nameKo: "장지윤",
     affiliationKo: "제이제노 대표",
-    nameEn: "Jang Jiyoon",
+    nameEn: "Jey Jang",
     affiliationEn: "Representative, JayGeno",
   },
   {
