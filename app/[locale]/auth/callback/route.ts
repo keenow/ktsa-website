@@ -1,11 +1,12 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/ko'
+  const next = searchParams.get('next') ?? '/ko/my/dashboard'
   const type = searchParams.get('type')
 
   if (code) {
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
         .single()
 
       if (!existing) {
-        await supabase.from('profiles').insert({
+        await supabaseAdmin.from('profiles').insert({
           id: data.user.id,
           email: data.user.email,
           name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || '',
