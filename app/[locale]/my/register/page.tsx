@@ -40,8 +40,16 @@ export default function RegisterPage() {
     setLoading(false)
   }
 
-  function handleOAuth(provider: 'google') {
-    window.location.href = "/api/auth/login"
+  async function handleOAuth(provider: 'google') {
+    const { createBrowserClient } = await import("@supabase/ssr")
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: "https://trailkorea.org/api/auth/callback" },
+    })
   }
 
   if (success) {

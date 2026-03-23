@@ -12,8 +12,6 @@ export async function GET(request: NextRequest) {
   }
 
   const cookieStore = await cookies()
-  const response = NextResponse.redirect(`${origin}/ko/my/dashboard`)
-
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -22,7 +20,7 @@ export async function GET(request: NextRequest) {
         getAll() { return cookieStore.getAll() },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options)
+            cookieStore.set(name, value, options)
           })
         },
       },
@@ -35,7 +33,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/ko/my/login?error=${encodeURIComponent(error.message)}`)
   }
 
-  // 신규 사용자 profiles 생성
   if (data.user) {
     const { data: existing } = await supabase.from("profiles").select("id").eq("id", data.user.id).single()
     if (!existing) {
@@ -49,5 +46,5 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return response
+  return NextResponse.redirect(`${origin}/ko/my/dashboard`)
 }
