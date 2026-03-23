@@ -47,7 +47,7 @@ export default function RegisterPage() {
     await supabase.auth.signInWithOAuth({
       provider,
       options: {
-        redirectTo: `${window.location.origin}/ko/auth/callback`,
+        redirectTo: `${window.location.origin}/api/auth/callback`,
       },
     })
     setLoading(false)

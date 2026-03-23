@@ -107,7 +107,7 @@ export async function resetPasswordWithEmail(formData: FormData) {
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${siteUrl}/ko/auth/callback?next=/ko/my/reset-password`,
+    redirectTo: `${siteUrl}/api/auth/callback?next=/ko/my/reset-password`,
   })
 
   if (error) return { error: '비밀번호 재설정 링크 전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
