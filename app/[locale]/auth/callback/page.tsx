@@ -1,32 +1,35 @@
 "use client"
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { createSupabaseBrowserClient } from "@/lib/supabase"
+import { createClient } from "@supabase/supabase-js"
 
 export default function AuthCallbackPage() {
   const router = useRouter()
 
   useEffect(() => {
-    const supabase = createSupabaseBrowserClient()
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
 
-    const code = new URLSearchParams(window.location.search).get("code")
-    if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-        if (error) {
-          router.replace(`/ko/my/login?error=${encodeURIComponent(error.message)}`)
-        } else {
-          router.replace("/ko/my/dashboard")
-        }
-      })
-    } else {
-      // hash-based flow (implicit)
-      supabase.auth.onAuthStateChange((event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          router.replace("/ko/my/dashboard")
-        } else if (event === "PASSWORD_RECOVERY") {
-          router.replace("/ko/my/reset-password")
-        }
-      })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        subscription.unsubscribe()
+        router.replace("/ko/my/dashboard")
+      } else if (event === "PASSWORD_RECOVERY") {
+        subscription.unsubscribe()
+        router.replace("/ko/my/reset-password")
+      }
+    })
+
+    const timer = setTimeout(() => {
+      subscription.unsubscribe()
+      router.replace("/ko/my/login?error=timeout")
+    }, 5000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timer)
     }
   }, [router])
 

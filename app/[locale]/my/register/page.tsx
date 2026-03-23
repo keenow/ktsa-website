@@ -4,7 +4,6 @@ import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { useState } from 'react'
 import { signUpWithEmail } from '../actions'
-import { createSupabaseBrowserClient } from '@/lib/supabase'
 
 export default function RegisterPage() {
   const locale = useLocale()
@@ -43,11 +42,16 @@ export default function RegisterPage() {
 
   async function handleOAuth(provider: 'google') {
     setLoading(true)
-    const supabase = createSupabaseBrowserClient()
-    await supabase.auth.signInWithOAuth({
+    const { createClient } = await import('@supabase/supabase-js')
+    const client = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    await client.auth.signInWithOAuth({
       provider,
       options: {
         redirectTo: `${window.location.origin}/ko/auth/callback`,
+        skipBrowserRedirect: false,
       },
     })
     setLoading(false)
