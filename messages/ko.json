@@ -72,6 +72,20 @@
     "english": "English",
     "coming_soon": "준비중"
   },
+  "login": {
+    "tab_email": "이메일",
+    "tab_phone": "전화번호",
+    "phone_label": "전화번호",
+    "phone_placeholder": "01012345678",
+    "send_code": "인증번호 받기",
+    "code_sent": "인증번호가 발송되었습니다.",
+    "otp_label": "인증번호 6자리",
+    "otp_placeholder": "123456",
+    "change_number": "번호 다시 입력",
+    "sign_in": "로그인",
+    "error_no_phone": "전화번호를 입력해주세요.",
+    "error_otp_length": "6자리 인증번호를 입력해주세요."
+  },
   "footer": {
     "association": "대한트레일스포츠협회 (KTSA)",
     "representative": "대표자: 장지윤",

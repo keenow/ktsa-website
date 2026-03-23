@@ -72,6 +72,20 @@
     "english": "English",
     "coming_soon": "Coming Soon"
   },
+  "login": {
+    "tab_email": "Email",
+    "tab_phone": "Phone",
+    "phone_label": "Phone Number",
+    "phone_placeholder": "01012345678",
+    "send_code": "Send Code",
+    "code_sent": "Verification code sent.",
+    "otp_label": "6-digit Code",
+    "otp_placeholder": "123456",
+    "change_number": "Change number",
+    "sign_in": "Sign In",
+    "error_no_phone": "Please enter your phone number.",
+    "error_otp_length": "Please enter the 6-digit code."
+  },
   "footer": {
     "association": "Korea Trail Sports Association (KTSA)",
     "representative": "Representative: Jey Jang",

@@ -123,6 +123,36 @@ export async function updatePassword(formData: FormData) {
   redirect('/ko/my/login?reset=done')
 }
 
+export async function signInWithPhone(phone: string) {
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.auth.signInWithOtp({ phone })
+  if (error) return { error: error.message }
+  return { success: true }
+}
+
+export async function verifyPhoneOtp(phone: string, token: string) {
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' })
+  if (error) return { error: error.message }
+
+  if (data.user) {
+    const countryCode = phone.match(/^\+\d+/)?.[0] || '+82'
+    await supabase.from('profiles').upsert(
+      {
+        id: data.user.id,
+        phone,
+        phone_country_code: countryCode,
+        phone_verified: true,
+        membership_grade: 'general',
+        is_active: true,
+      },
+      { onConflict: 'id' }
+    )
+  }
+
+  redirect('/ko')
+}
+
 export async function signInWithOAuth(provider: 'google' | 'kakao') {
   const supabase = await createSupabaseServerClient()
 
