@@ -66,21 +66,8 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  async function handleOAuth(provider: 'google') {
-    setLoading(true)
-    const { createClient } = await import('@supabase/supabase-js')
-    const client = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { auth: { flowType: 'implicit' } }
-    )
-    await client.auth.signInWithOAuth({
-      provider,
-      options: {
-        redirectTo: `${window.location.origin}/ko/auth/callback`,
-      },
-    })
-    setLoading(false)
+  function handleOAuth(provider: 'google') {
+    window.location.href = "/api/auth/login"
   }
 
   async function handleSendOtp() {
