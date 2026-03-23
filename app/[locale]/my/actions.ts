@@ -3,6 +3,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 async function createSupabaseServerClient() {
   const cookieStore = await cookies()
@@ -42,11 +43,11 @@ export async function signUpWithEmail(formData: FormData) {
     if (error.message.includes('already registered')) {
       return { error: '이미 가입된 이메일입니다.' }
     }
-    return { error: error.message }
+    return { error: '회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
   }
 
   if (data.user) {
-    const { error: profileError } = await supabase
+    const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert({
         id: data.user.id,
@@ -60,7 +61,7 @@ export async function signUpWithEmail(formData: FormData) {
       })
 
     if (profileError) {
-      return { error: profileError.message }
+      return { error: '회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
     }
   }
 
@@ -100,7 +101,7 @@ export async function resetPasswordWithEmail(formData: FormData) {
     .eq('email', email)
     .maybeSingle()
 
-  if (profileError) return { error: profileError.message }
+  if (profileError) return { error: '비밀번호 재설정 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
   if (!profile) {
     return { error: '가입되지 않은 이메일입니다. 이메일 주소를 다시 확인해주세요.' }
   }
@@ -109,7 +110,7 @@ export async function resetPasswordWithEmail(formData: FormData) {
     redirectTo: `${siteUrl}/auth/callback?next=/ko/my/reset-password`,
   })
 
-  if (error) return { error: error.message }
+  if (error) return { error: '비밀번호 재설정 링크 전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
   return { success: true }
 }
 
@@ -118,7 +119,7 @@ export async function updatePassword(formData: FormData) {
   const password = formData.get('password') as string
 
   const { error } = await supabase.auth.updateUser({ password })
-  if (error) return { error: error.message }
+  if (error) return { error: '비밀번호 변경 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
 
   redirect('/ko/my/login?reset=done')
 }
@@ -126,14 +127,14 @@ export async function updatePassword(formData: FormData) {
 export async function signInWithPhone(phone: string) {
   const supabase = await createSupabaseServerClient()
   const { error } = await supabase.auth.signInWithOtp({ phone })
-  if (error) return { error: error.message }
+  if (error) return { error: '인증번호 전송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
   return { success: true }
 }
 
 export async function verifyPhoneOtp(phone: string, token: string) {
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' })
-  if (error) return { error: error.message }
+  if (error) return { error: '인증번호가 올바르지 않습니다. 다시 확인해주세요.' }
 
   if (data.user) {
     const countryCode = phone.match(/^\+\d+/)?.[0] || '+82'
@@ -153,7 +154,7 @@ export async function verifyPhoneOtp(phone: string, token: string) {
   redirect('/ko')
 }
 
-export async function signInWithOAuth(provider: 'google' | 'kakao') {
+export async function signInWithOAuth(provider: 'google') {
   const supabase = await createSupabaseServerClient()
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://trailkorea.org'
@@ -165,6 +166,6 @@ export async function signInWithOAuth(provider: 'google' | 'kakao') {
     },
   })
 
-  if (error) return { error: error.message }
+  if (error) return { error: '소셜 로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
   if (data.url) redirect(data.url)
 }

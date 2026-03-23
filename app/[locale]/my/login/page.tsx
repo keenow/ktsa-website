@@ -63,7 +63,7 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  async function handleOAuth(provider: 'google' | 'kakao') {
+  async function handleOAuth(provider: 'google') {
     setLoading(true)
     await signInWithOAuth(provider)
     setLoading(false)
@@ -409,17 +409,6 @@ export default function LoginPage() {
                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
               </svg>
               Google로 로그인
-            </button>
-            <button
-              type="button"
-              onClick={() => handleOAuth('kakao')}
-              disabled={loading}
-              className="w-full bg-[#FEE500] rounded-lg py-2.5 text-sm text-[#191919] font-medium flex items-center justify-center gap-2 hover:bg-[#F5DC00] transition disabled:opacity-50"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#191919">
-                <path d="M12 3C6.477 3 2 6.477 2 10.8c0 2.7 1.7 5.1 4.3 6.5l-1.1 4 4.5-2.9c.7.1 1.5.2 2.3.2 5.523 0 10-3.477 10-7.8S17.523 3 12 3z"/>
-              </svg>
-              카카오로 로그인
             </button>
           </div>
 
