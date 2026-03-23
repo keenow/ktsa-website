@@ -4,7 +4,9 @@ import { useTranslations, useLocale } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 export default function Header() {
   const t = useTranslations("nav");
@@ -12,6 +14,32 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const navLinks = [
     { href: `/${locale}`, label: t("home") },
@@ -26,6 +54,32 @@ export default function Header() {
     segments[1] = newLocale;
     router.push(segments.join("/"));
   };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setDropdownOpen(false);
+    setMenuOpen(false);
+    router.push(`/${locale}`);
+  };
+
+  // Derive avatar display info
+  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined;
+  const fullName = (user?.user_metadata?.full_name ?? user?.user_metadata?.name ?? user?.email ?? "") as string;
+  const initials = fullName.trim().charAt(0).toUpperCase() || "U";
+
+  const AvatarButton = ({ onClick }: { onClick: () => void }) => (
+    <button
+      onClick={onClick}
+      className="flex items-center justify-center w-8 h-8 rounded-full bg-[#1e3a6e] text-white text-sm font-semibold overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#1e3a6e] focus:ring-offset-1"
+      aria-label="User menu"
+    >
+      {avatarUrl ? (
+        <Image src={avatarUrl} alt={fullName} width={32} height={32} className="w-full h-full object-cover" />
+      ) : (
+        initials
+      )}
+    </button>
+  );
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -56,7 +110,7 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Language Toggle + Mobile Menu */}
+          {/* Language Toggle + Auth */}
           <div className="flex items-center gap-2">
             <div className="flex rounded-lg border border-gray-200 overflow-hidden text-xs">
               <button
@@ -81,21 +135,47 @@ export default function Header() {
               </button>
             </div>
 
-            {/* 회원가입 버튼 */}
-            <Link
-              href={`/${locale}/my/register`}
-              className="hidden md:inline-block text-xs bg-[#1e3a6e] text-white px-3 py-1.5 rounded-lg hover:bg-[#16305c] transition-colors"
-            >
-              {t("register")}
-            </Link>
+            {user ? (
+              /* Logged in: avatar + dropdown (desktop) */
+              <div className="relative hidden md:block" ref={dropdownRef}>
+                <AvatarButton onClick={() => setDropdownOpen(!dropdownOpen)} />
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50">
+                    <Link
+                      href={`/${locale}/my/dashboard`}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#1e3a6e]"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      {t("mypage")}
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-red-600"
+                    >
+                      {t("logout")}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* 회원가입 버튼 */}
+                <Link
+                  href={`/${locale}/my/register`}
+                  className="hidden md:inline-block text-xs bg-[#1e3a6e] text-white px-3 py-1.5 rounded-lg hover:bg-[#16305c] transition-colors"
+                >
+                  {t("register")}
+                </Link>
 
-            {/* 로그인 버튼 */}
-            <Link
-              href={`/${locale}/my/login`}
-              className="hidden md:inline-block text-xs border border-[#1e3a6e] text-[#1e3a6e] px-3 py-1.5 rounded-lg hover:bg-[#1e3a6e] hover:text-white transition-colors"
-            >
-              {t("login")}
-            </Link>
+                {/* 로그인 버튼 */}
+                <Link
+                  href={`/${locale}/my/login`}
+                  className="hidden md:inline-block text-xs border border-[#1e3a6e] text-[#1e3a6e] px-3 py-1.5 rounded-lg hover:bg-[#1e3a6e] hover:text-white transition-colors"
+                >
+                  {t("login")}
+                </Link>
+              </>
+            )}
 
             {/* Mobile menu toggle */}
             <button
@@ -127,20 +207,51 @@ export default function Header() {
               </Link>
             ))}
             <div className="border-t border-gray-100 mt-2 pt-2 flex flex-col gap-1">
-              <Link
-                href={`/${locale}/my/register`}
-                className="px-2 py-2 text-sm font-medium text-white bg-[#1e3a6e] rounded text-center"
-                onClick={() => setMenuOpen(false)}
-              >
-                {t("register")}
-              </Link>
-              <Link
-                href={`/${locale}/my/login`}
-                className="px-2 py-2 text-sm text-[#1e3a6e] border border-[#1e3a6e] rounded text-center"
-                onClick={() => setMenuOpen(false)}
-              >
-                {t("login")}
-              </Link>
+              {user ? (
+                <>
+                  {/* Mobile: avatar info row */}
+                  <div className="flex items-center gap-2 px-2 py-2">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-[#1e3a6e] text-white text-sm font-semibold overflow-hidden shrink-0">
+                      {avatarUrl ? (
+                        <Image src={avatarUrl} alt={fullName} width={32} height={32} className="w-full h-full object-cover" />
+                      ) : (
+                        initials
+                      )}
+                    </div>
+                    <span className="text-sm text-gray-700 truncate">{fullName || user.email}</span>
+                  </div>
+                  <Link
+                    href={`/${locale}/my/dashboard`}
+                    className="px-2 py-2 text-sm font-medium text-[#1e3a6e] border border-[#1e3a6e] rounded text-center"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {t("mypage")}
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="px-2 py-2 text-sm text-red-600 border border-red-200 rounded text-center"
+                  >
+                    {t("logout")}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href={`/${locale}/my/register`}
+                    className="px-2 py-2 text-sm font-medium text-white bg-[#1e3a6e] rounded text-center"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {t("register")}
+                  </Link>
+                  <Link
+                    href={`/${locale}/my/login`}
+                    className="px-2 py-2 text-sm text-[#1e3a6e] border border-[#1e3a6e] rounded text-center"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {t("login")}
+                  </Link>
+                </>
+              )}
             </div>
           </nav>
         )}

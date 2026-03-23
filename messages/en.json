@@ -7,7 +7,9 @@
     "contact": "Contact",
     "members": "Members",
     "register": "Sign Up",
-    "login": "Sign In"
+    "login": "Sign In",
+    "mypage": "My Page",
+    "logout": "Sign Out"
   },
   "home": {
     "hero_title": "Korea Trail Sports Association",

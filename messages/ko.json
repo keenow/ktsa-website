@@ -7,7 +7,9 @@
     "contact": "문의",
     "members": "회원",
     "register": "회원가입",
-    "login": "로그인"
+    "login": "로그인",
+    "mypage": "마이페이지",
+    "logout": "로그아웃"
   },
   "home": {
     "hero_title": "대한트레일스포츠협회",
