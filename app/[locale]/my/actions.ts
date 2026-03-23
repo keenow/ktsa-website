@@ -153,19 +153,3 @@ export async function verifyPhoneOtp(phone: string, token: string) {
 
   redirect('/ko')
 }
-
-export async function signInWithOAuth(provider: 'google') {
-  const supabase = await createSupabaseServerClient()
-
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://trailkorea.org'
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: `${siteUrl}/ko/auth/callback`,
-    },
-  })
-
-  if (error) return { error: '소셜 로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
-  if (data.url) redirect(data.url)
-}

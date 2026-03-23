@@ -3,7 +3,8 @@
 import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { useState } from 'react'
-import { signUpWithEmail, signInWithOAuth } from '../actions'
+import { signUpWithEmail } from '../actions'
+import { createSupabaseBrowserClient } from '@/lib/supabase'
 
 export default function RegisterPage() {
   const locale = useLocale()
@@ -42,7 +43,13 @@ export default function RegisterPage() {
 
   async function handleOAuth(provider: 'google') {
     setLoading(true)
-    await signInWithOAuth(provider)
+    const supabase = createSupabaseBrowserClient()
+    await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/ko/auth/callback`,
+      },
+    })
     setLoading(false)
   }
 

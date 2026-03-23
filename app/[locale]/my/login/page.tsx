@@ -4,7 +4,8 @@ import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
-import { signInWithEmail, signInWithOAuth, resetPasswordWithEmail, signInWithPhone, verifyPhoneOtp } from '../actions'
+import { signInWithEmail, resetPasswordWithEmail, signInWithPhone, verifyPhoneOtp } from '../actions'
+import { createSupabaseBrowserClient } from '@/lib/supabase'
 
 const COUNTRY_CODES = [
   { code: '+82', label: '🇰🇷 +82' },
@@ -68,7 +69,13 @@ export default function LoginPage() {
 
   async function handleOAuth(provider: 'google') {
     setLoading(true)
-    await signInWithOAuth(provider)
+    const supabase = createSupabaseBrowserClient()
+    await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/ko/auth/callback`,
+      },
+    })
     setLoading(false)
   }
 
