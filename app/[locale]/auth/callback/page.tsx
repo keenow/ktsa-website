@@ -9,23 +9,17 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { flowType: "implicit" } }
     )
 
-    const code = new URLSearchParams(window.location.search).get("code")
-
-    if (code) {
-      // localStorage에 PKCE 검증값이 있으므로 동일 클라이언트로 교환 가능
-      supabase.auth.exchangeCodeForSession(code)
-        .then(({ error }) => {
-          if (error) {
-            router.replace(`/ko/my/login?error=${encodeURIComponent(error.message)}`)
-          } else {
-            router.replace("/ko/my/dashboard")
-          }
-        })
-    } else {
-      // code가 없으면 auth state 변화 감지 (비밀번호 재설정 등)
+    // implicit flow: URL 해시에서 토큰 자동 감지
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        router.replace("/ko/my/dashboard")
+        return
+      }
+      // 아직 세션 없으면 상태 변화 대기
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         if (event === "SIGNED_IN" && session) {
           subscription.unsubscribe()
@@ -37,10 +31,10 @@ export default function AuthCallbackPage() {
       })
       const timer = setTimeout(() => {
         subscription.unsubscribe()
-        router.replace("/ko/my/login?error=timeout")
+        router.replace("/ko/my/login?error=login_failed")
       }, 5000)
       return () => { subscription.unsubscribe(); clearTimeout(timer) }
-    }
+    })
   }, [router])
 
   return (

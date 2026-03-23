@@ -71,13 +71,13 @@ export default function LoginPage() {
     const { createClient } = await import('@supabase/supabase-js')
     const client = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      { auth: { flowType: 'implicit' } }
     )
     await client.auth.signInWithOAuth({
       provider,
       options: {
         redirectTo: `${window.location.origin}/ko/auth/callback`,
-        skipBrowserRedirect: false,
       },
     })
     setLoading(false)
