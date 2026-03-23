@@ -221,7 +221,7 @@ function VLine() {
 
 function BoardMemberTag({ member, locale }: { member: OrgMember; locale: Locale }) {
   return (
-    <div className="text-xs text-gray-700 leading-snug">
+    <div className="text-xs text-gray-700 leading-snug whitespace-nowrap break-inside-avoid min-w-[160px]">
       <span className="font-semibold text-green-700">{roleLabel(member, locale)}</span>{" "}
       {memberLabel(member, locale)}
     </div>
