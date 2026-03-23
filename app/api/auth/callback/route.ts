@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   }
 
   const cookieStore = await cookies()
-  const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/ko/my/dashboard`)
+  const response = NextResponse.redirect(`${origin}/ko/my/dashboard`)
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/ko/my/login?error=${encodeURIComponent(error.message)}`)
+    return NextResponse.redirect(`${origin}/ko/my/login?error=${encodeURIComponent(error.message)}`)
   }
 
   // 신규 사용자 profiles 생성

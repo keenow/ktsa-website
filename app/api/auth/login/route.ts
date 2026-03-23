@@ -24,12 +24,12 @@ export async function GET() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback`,
+      redirectTo: "https://trailkorea.org/api/auth/callback",
     },
   })
 
   if (error || !data.url) {
-    return NextResponse.redirect(new URL("/ko/my/login?error=oauth_init_failed", process.env.NEXT_PUBLIC_SITE_URL!))
+    return NextResponse.redirect(new URL("/ko/my/login?error=oauth_init_failed", "https://trailkorea.org"))
   }
 
   // PKCE 쿠키를 응답에 포함시켜 브라우저에 저장
