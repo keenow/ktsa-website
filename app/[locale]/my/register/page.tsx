@@ -113,7 +113,7 @@ export default function RegisterPage() {
             <span className="text-xs font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0 mt-0.5">
               {isKo ? '준회원' : 'Associate'}
             </span>
-            <p className="text-xs text-gray-600">
+            <p className="text-xs text-gray-600 leading-relaxed break-keep">
               {isKo ? '가입 후 마이페이지에서 정회원 업그레이드 가능' : 'Upgrade to Regular after sign-up'}
             </p>
           </div>
