@@ -4,7 +4,9 @@ import { NextResponse } from "next/server"
 
 export async function GET() {
   const cookieStore = await cookies()
-  const response = new NextResponse()
+
+  // setAll로 전달되는 쿠키를 먼저 수집
+  const pendingCookies: { name: string; value: string; options: Record<string, unknown> }[] = []
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,7 +16,7 @@ export async function GET() {
         getAll() { return cookieStore.getAll() },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options)
+            pendingCookies.push({ name, value, options })
           })
         },
       },
@@ -29,13 +31,14 @@ export async function GET() {
   })
 
   if (error || !data.url) {
-    return NextResponse.redirect(new URL("/ko/my/login?error=oauth_init_failed", "https://trailkorea.org"))
+    return NextResponse.redirect("https://trailkorea.org/ko/my/login?error=oauth_init_failed")
   }
 
-  // PKCE 쿠키를 응답에 포함시켜 브라우저에 저장
+  // PKCE 쿠키를 원본 옵션 그대로 redirect 응답에 첨부
   const redirectResponse = NextResponse.redirect(data.url)
-  response.cookies.getAll().forEach(cookie => {
-    redirectResponse.cookies.set(cookie.name, cookie.value, { path: "/" })
+  pendingCookies.forEach(({ name, value, options }) => {
+    redirectResponse.cookies.set(name, value, options as Parameters<typeof redirectResponse.cookies.set>[2])
   })
+
   return redirectResponse
 }
