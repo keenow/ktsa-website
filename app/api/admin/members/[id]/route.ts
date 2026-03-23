@@ -3,9 +3,10 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const { membership_grade, is_active } = body as {
       membership_grade?: string;
@@ -23,7 +24,7 @@ export async function PATCH(
     const { data, error } = await supabaseAdmin
       .from("profiles")
       .update(updates)
-      .eq("id", params.id)
+      .eq("id", id)
       .select()
       .single();
 
