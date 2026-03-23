@@ -2,6 +2,7 @@
 
 import { useLocale } from 'next-intl'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { signInWithEmail, signInWithOAuth, resetPasswordWithEmail, signInWithPhone, verifyPhoneOtp } from '../actions'
 
@@ -27,6 +28,8 @@ function formatPhoneE164(number: string, countryCode: string): string {
 export default function LoginPage() {
   const locale = useLocale()
   const isKo = locale === 'ko'
+  const searchParams = useSearchParams()
+  const urlError = searchParams.get('error')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [mode, setMode] = useState<'login' | 'forgot'>('login')
@@ -216,6 +219,14 @@ export default function LoginPage() {
             {isKo ? '대한트레일스포츠협회' : 'Korea Trail Sports Association'}
           </p>
         </div>
+
+        {/* OAuth 콜백 에러 배너 */}
+        {urlError && (
+          <div className="mb-4 bg-red-50 border border-red-300 rounded-xl p-4">
+            <p className="text-red-700 text-xs font-semibold mb-0.5">로그인 오류 (디버그)</p>
+            <p className="text-red-600 text-xs break-all">{urlError}</p>
+          </div>
+        )}
 
         {/* 카드 */}
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
