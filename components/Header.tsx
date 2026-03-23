@@ -86,7 +86,7 @@ export default function Header() {
               href={`/${locale}/my/register`}
               className="hidden md:inline-block text-xs bg-[#1e3a6e] text-white px-3 py-1.5 rounded-lg hover:bg-[#16305c] transition-colors"
             >
-              {locale === "ko" ? "회원가입" : "Sign Up"}
+              {t("register")}
             </Link>
 
             {/* 로그인 버튼 */}
@@ -94,7 +94,7 @@ export default function Header() {
               href={`/${locale}/my/login`}
               className="hidden md:inline-block text-xs border border-[#1e3a6e] text-[#1e3a6e] px-3 py-1.5 rounded-lg hover:bg-[#1e3a6e] hover:text-white transition-colors"
             >
-              {locale === "ko" ? "로그인" : "Sign In"}
+              {t("login")}
             </Link>
 
             {/* Mobile menu toggle */}
@@ -120,7 +120,7 @@ export default function Header() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-2 py-2 text-sm text-gray-700 hover:text-green-600 hover:bg-gray-50 rounded"
+                className="px-2 py-2 text-sm text-gray-700 hover:text-[#1e3a6e] hover:bg-gray-50 rounded"
                 onClick={() => setMenuOpen(false)}
               >
                 {link.label}
@@ -132,14 +132,14 @@ export default function Header() {
                 className="px-2 py-2 text-sm font-medium text-white bg-[#1e3a6e] rounded text-center"
                 onClick={() => setMenuOpen(false)}
               >
-                {locale === "ko" ? "회원가입" : "Sign Up"}
+                {t("register")}
               </Link>
               <Link
                 href={`/${locale}/my/login`}
                 className="px-2 py-2 text-sm text-[#1e3a6e] border border-[#1e3a6e] rounded text-center"
                 onClick={() => setMenuOpen(false)}
               >
-                {locale === "ko" ? "로그인" : "Sign In"}
+                {t("login")}
               </Link>
             </div>
           </nav>

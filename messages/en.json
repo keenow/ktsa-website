@@ -5,7 +5,9 @@
     "races": "Races",
     "news": "News",
     "contact": "Contact",
-    "members": "Members"
+    "members": "Members",
+    "register": "Sign Up",
+    "login": "Sign In"
   },
   "home": {
     "hero_title": "Korea Trail Sports Association",
@@ -76,6 +78,7 @@
     "address": "101, 4, Duteokbawi-ro 69-gil, Yongsan-gu, Seoul",
     "reg_number": "Registration No. 216-82-74874",
     "copyright": "© 2026 Korea Trail Sports Association. All rights reserved.",
-    "privacy": "Privacy Policy"
+    "privacy": "Privacy Policy",
+    "privacy_policy": "Privacy Policy"
   }
 }

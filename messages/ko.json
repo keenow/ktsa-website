@@ -5,7 +5,9 @@
     "races": "대회",
     "news": "뉴스·공지",
     "contact": "문의",
-    "members": "회원"
+    "members": "회원",
+    "register": "회원가입",
+    "login": "로그인"
   },
   "home": {
     "hero_title": "대한트레일스포츠협회",
@@ -76,6 +78,7 @@
     "address": "서울특별시 용산구 두텁바위로69길 4, 101호 (후암동)",
     "reg_number": "고유번호: 216-82-74874",
     "copyright": "© 2026 대한트레일스포츠협회. All rights reserved.",
-    "privacy": "개인정보 처리방침"
+    "privacy": "개인정보 처리방침",
+    "privacy_policy": "개인정보처리방침"
   }
 }

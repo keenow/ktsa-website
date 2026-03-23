@@ -33,7 +33,7 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-8 pt-6 text-xs text-gray-600 text-center space-y-2">
           <div>
             <Link href={`/${locale}/privacy`} className="hover:text-gray-300 transition-colors underline underline-offset-2">
-              개인정보처리방침
+              {t("privacy_policy")}
             </Link>
           </div>
           <div>{t("copyright")}</div>
