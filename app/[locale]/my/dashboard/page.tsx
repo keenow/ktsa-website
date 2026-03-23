@@ -1,19 +1,73 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 
-// 목업 — 실제 연동 전
-const MOCK_USER = {
-  name: "홍길동",
-  email: "hong@example.com",
-  memberType: "ASSOCIATE" as const,
+type MembershipGrade = "general" | "member" | "admin";
+
+interface Profile {
+  name: string | null;
+  email: string | null;
+  membership_grade: MembershipGrade | null;
+}
+
+const GRADE_LABEL: Record<MembershipGrade, { ko: string; en: string }> = {
+  general: { ko: "준회원", en: "Associate Member" },
+  member:  { ko: "정회원", en: "Regular Member" },
+  admin:   { ko: "관리자", en: "Admin" },
 };
 
 export default function MyDashboard() {
   const locale = useLocale();
+  const router = useRouter();
   const isKo = locale === "ko";
-  const isAssociate = MOCK_USER.memberType === "ASSOCIATE";
+
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace("/ko/my/login");
+        return;
+      }
+
+      const { data } = await supabase
+        .from("profiles")
+        .select("name, email, membership_grade")
+        .eq("id", user.id)
+        .single();
+
+      setProfile({
+        name: data?.name ?? null,
+        email: data?.email ?? user.email ?? null,
+        membership_grade: (data?.membership_grade as MembershipGrade) ?? "general",
+      });
+      setLoading(false);
+    })();
+  }, [router]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push(`/${locale}`);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#1e3a6e] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const grade = profile?.membership_grade ?? "general";
+  const gradeLabel = isKo ? GRADE_LABEL[grade].ko : GRADE_LABEL[grade].en;
+  const isAssociate = grade === "general";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -21,9 +75,9 @@ export default function MyDashboard() {
       <div className="bg-[#1e3a6e] text-white px-4 py-8">
         <div className="max-w-xl mx-auto">
           <p className="text-blue-200 text-sm mb-1">{isKo ? "안녕하세요" : "Welcome"}</p>
-          <h1 className="text-xl font-bold">{MOCK_USER.name}</h1>
+          <h1 className="text-xl font-bold">{profile?.name ?? profile?.email ?? ""}</h1>
           <span className="mt-2 inline-block text-xs bg-white/20 px-2.5 py-1 rounded-full">
-            {isKo ? "준회원" : "Associate Member"}
+            {gradeLabel}
           </span>
         </div>
       </div>
@@ -78,34 +132,6 @@ export default function MyDashboard() {
           </div>
         )}
 
-        {/* 기업회원 카드 */}
-        {isAssociate && (
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <h2 className="font-bold text-gray-900">
-                  {isKo ? "기업회원 신청" : "Apply as Corporate Member"}
-                </h2>
-                <p className="text-sm text-gray-500 mt-0.5">
-                  {isKo ? "2026년 무료" : "Free in 2026"}
-                </p>
-              </div>
-              <span className="text-2xl">🏢</span>
-            </div>
-            <p className="text-sm text-gray-500 mb-4">
-              {isKo
-                ? "대회장 포토월·홍보 부스·교육 프로그램 지원"
-                : "Photo wall, booth, training programs"}
-            </p>
-            <Link
-              href={`/${locale}/my/upgrade?type=corporate`}
-              className="block w-full text-center border border-[#1e3a6e] text-[#1e3a6e] rounded-lg py-2.5 text-sm font-semibold hover:bg-[#f0f3f9] transition-colors"
-            >
-              {isKo ? "기업회원 신청" : "Apply"}
-            </Link>
-          </div>
-        )}
-
         {/* 내 정보 카드 */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h2 className="font-bold text-gray-900 mb-3">
@@ -114,15 +140,15 @@ export default function MyDashboard() {
           <div className="space-y-2 text-sm text-gray-600">
             <div className="flex justify-between">
               <span className="text-gray-400">{isKo ? "이름" : "Name"}</span>
-              <span>{MOCK_USER.name}</span>
+              <span>{profile?.name ?? "-"}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">{isKo ? "이메일" : "Email"}</span>
-              <span>{MOCK_USER.email}</span>
+              <span>{profile?.email ?? "-"}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-400">{isKo ? "회원 등급" : "Grade"}</span>
-              <span className="font-medium text-gray-700">{isKo ? "준회원" : "Associate"}</span>
+              <span className="font-medium text-gray-700">{gradeLabel}</span>
             </div>
           </div>
           <Link
@@ -134,7 +160,10 @@ export default function MyDashboard() {
         </div>
 
         {/* 로그아웃 */}
-        <button className="w-full text-sm text-gray-400 hover:text-gray-600 py-2">
+        <button
+          onClick={handleLogout}
+          className="w-full text-sm text-gray-400 hover:text-gray-600 py-2"
+        >
           {isKo ? "로그아웃" : "Sign out"}
         </button>
 
