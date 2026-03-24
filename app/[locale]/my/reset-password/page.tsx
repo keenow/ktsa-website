@@ -1,3 +1,9 @@
+/**
+ * @file 비밀번호 재설정 페이지
+ * @description 이메일 링크를 통해 접근한 사용자가 새 비밀번호를 설정하는 페이지
+ * @module member
+ */
+
 'use client'
 
 import { useLocale } from 'next-intl'
@@ -5,12 +11,26 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { updatePassword } from '../actions'
 
+/**
+ * 비밀번호 재설정 페이지 컴포넌트
+ * @description 새 비밀번호 입력 및 확인 후 updatePassword Server Action 호출
+ * @returns 비밀번호 재설정 폼 JSX
+ */
 export default function ResetPasswordPage() {
   const locale = useLocale()
   const isKo = locale === 'ko'
+
+  // ─── 상태 관리 ─────────────────────────────────────
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  // ─── 이벤트 핸들러 ──────────────────────────────────
+
+  /**
+   * 비밀번호 변경 폼 제출 처리
+   * @param e - React.FormEvent<HTMLFormElement>
+   * @returns void (유효성 검사 실패 시 조기 반환, 성공 시 updatePassword 호출)
+   */
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
@@ -29,6 +49,7 @@ export default function ResetPasswordPage() {
     }
 
     setLoading(true)
+    // NOTE: updatePassword는 Server Action — Supabase 세션 기반으로 비밀번호 변경
     const result = await updatePassword(formData)
     if (result?.error) {
       setError(result.error)
@@ -36,6 +57,7 @@ export default function ResetPasswordPage() {
     }
   }
 
+  // ─── 렌더링 ─────────────────────────────────────────
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">

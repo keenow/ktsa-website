@@ -1,14 +1,28 @@
+/**
+ * @file 회원 업그레이드 신청 페이지
+ * @description 준회원이 정회원 또는 기업회원으로 업그레이드 신청하는 페이지 (탭 전환 UI)
+ * @module member
+ */
+
 "use client";
 
 import { useLocale } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
+/**
+ * 회원 업그레이드 신청 페이지 컴포넌트
+ * @description URL 파라미터 `type`으로 초기 탭(regular | corporate) 결정,
+ *              각 탭에서 신청 폼 제출 시 접수 완료 화면으로 전환
+ * @returns 업그레이드 신청 페이지 JSX
+ */
 export default function UpgradePage() {
   const locale = useLocale();
   const searchParams = useSearchParams();
   const isKo = locale === "ko";
 
+  // ─── 상태 관리 ─────────────────────────────────────
+  // NOTE: URL 쿼리 파라미터 ?type=corporate 로 기업회원 탭을 직접 진입할 수 있음
   const initialTab = searchParams.get("type") === "corporate" ? "corporate" : "regular";
   const [tab, setTab] = useState<"regular" | "corporate">(initialTab);
 
@@ -71,6 +85,12 @@ export default function UpgradePage() {
       : "⚠ Applicants must have prior experience at a recognized KTSA race.",
   };
 
+  // ─── 이벤트 핸들러 ──────────────────────────────────
+  // NOTE: 정회원/기업회원 폼 submit 핸들러는 각 <form onSubmit> 인라인으로 처리
+  //       현재는 submitted 플래그만 변경 (실제 API 연동은 추후 추가 예정)
+  // TODO: 신청 데이터를 Supabase upgrade_requests 테이블에 저장하는 API 연동 필요
+
+  // ─── 렌더링 ─────────────────────────────────────────
   if (submitted) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
