@@ -1,3 +1,8 @@
+/**
+ * @file 로그인 페이지
+ * @description 이메일/비밀번호, 전화번호 OTP, Google OAuth 로그인을 지원하는 클라이언트 컴포넌트
+ * @module auth
+ */
 'use client'
 
 import { useLocale } from 'next-intl'
@@ -30,6 +35,8 @@ export default function LoginPage() {
   const isKo = locale === 'ko'
   const searchParams = useSearchParams()
   const urlError = searchParams.get('error')
+
+  // ─── 상태 관리 ─────────────────────────────────────
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [mode, setMode] = useState<'login' | 'forgot'>('login')
@@ -42,6 +49,12 @@ export default function LoginPage() {
   const [otpSent, setOtpSent] = useState(false)
   const [otp, setOtp] = useState('')
 
+  // ─── 이벤트 핸들러 ──────────────────────────────────
+
+  /**
+   * 이메일/비밀번호 로그인 처리
+   * @param e - 폼 제출 이벤트
+   */
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
@@ -52,6 +65,10 @@ export default function LoginPage() {
     setLoading(false)
   }
 
+  /**
+   * 비밀번호 재설정 이메일 전송 처리
+   * @param e - 폼 제출 이벤트
+   */
   async function handleReset(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
@@ -66,6 +83,11 @@ export default function LoginPage() {
     setLoading(false)
   }
 
+  /**
+   * Google OAuth 로그인 처리 — createBrowserClient로 PKCE 흐름 시작
+   * @param provider - 'google'
+   * @returns void (signInWithOAuth가 OAuth 제공자로 리다이렉트 처리)
+   */
   async function handleOAuth(provider: 'google') {
     const { createBrowserClient } = await import("@supabase/ssr")
     const supabase = createBrowserClient(
@@ -78,6 +100,10 @@ export default function LoginPage() {
     })
   }
 
+  /**
+   * 전화번호로 OTP 인증번호 발송
+   * @returns void (발송 성공 시 otpSent 상태를 true로 변경)
+   */
   async function handleSendOtp() {
     const phone = formatPhoneE164(phoneNumber, countryCode)
     if (!phoneNumber.trim()) {
@@ -95,6 +121,10 @@ export default function LoginPage() {
     setLoading(false)
   }
 
+  /**
+   * 전화번호 OTP 인증번호 검증 및 로그인 처리
+   * @param e - 폼 제출 이벤트
+   */
   async function handleVerifyOtp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!otp.trim() || otp.length !== 6) {
@@ -111,6 +141,10 @@ export default function LoginPage() {
     setLoading(false)
   }
 
+  /**
+   * 이메일/전화번호 탭 전환 및 관련 상태 초기화
+   * @param tab - 'email' | 'phone'
+   */
   function handleTabSwitch(tab: 'email' | 'phone') {
     setLoginTab(tab)
     setError(null)

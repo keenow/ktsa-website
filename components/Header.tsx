@@ -1,3 +1,8 @@
+/**
+ * @file 글로벌 헤더 컴포넌트
+ * @description 내비게이션, 언어 전환, 로그인/로그아웃, 사용자 드롭다운을 포함하는 최상단 헤더
+ * @module ui
+ */
 "use client";
 
 import { useTranslations, useLocale } from "next-intl";
@@ -13,10 +18,14 @@ export default function Header() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
+
+  // ─── 상태 관리 ─────────────────────────────────────
   const [menuOpen, setMenuOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // ─── 사이드 이펙트 ──────────────────────────────────
 
   useEffect(() => {
     // getSession reads locally — no network round-trip, so auth state is
@@ -51,12 +60,21 @@ export default function Header() {
     { href: `/${locale}/contact`, label: t("contact") },
   ];
 
+  // ─── 이벤트 핸들러 ──────────────────────────────────
+
+  /**
+   * 언어 전환 — 현재 경로의 로케일 세그먼트를 교체해 이동
+   * @param newLocale - 'ko' | 'en'
+   */
   const switchLocale = (newLocale: string) => {
     const segments = pathname.split("/");
     segments[1] = newLocale;
     router.push(segments.join("/"));
   };
 
+  /**
+   * 로그아웃 처리 — Supabase 세션 종료 후 홈으로 리다이렉트
+   */
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setDropdownOpen(false);
