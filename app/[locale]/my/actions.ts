@@ -1,3 +1,8 @@
+/**
+ * @file 인증 관련 Server Actions
+ * @description 이메일/OAuth/전화번호 인증, 비밀번호 재설정 등 인증 흐름 전반을 처리하는 서버 액션 모음
+ * @module auth
+ */
 'use server'
 
 import { createServerClient } from '@supabase/ssr'
@@ -5,6 +10,10 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
+/**
+ * 서버 컴포넌트 및 Server Action용 Supabase 클라이언트 생성
+ * @returns Supabase 서버 클라이언트 인스턴스
+ */
 async function createSupabaseServerClient() {
   const cookieStore = await cookies()
   return createServerClient(
@@ -27,6 +36,12 @@ async function createSupabaseServerClient() {
   )
 }
 
+/**
+ * 이메일 회원가입 처리
+ * @description Supabase Auth 계정 생성 후 profiles 테이블에 사용자 정보 INSERT
+ * @param formData - email, password, name, phone, phone_country_code, birth_date 포함
+ * @returns { success: true } 또는 { error: string }
+ */
 export async function signUpWithEmail(formData: FormData) {
   const supabase = await createSupabaseServerClient()
 
@@ -47,6 +62,7 @@ export async function signUpWithEmail(formData: FormData) {
   }
 
   if (data.user) {
+    // NOTE: supabaseAdmin 사용 — profiles INSERT는 RLS 정책상 일반 클라이언트로 불가
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .insert({
@@ -68,6 +84,12 @@ export async function signUpWithEmail(formData: FormData) {
   return { success: true, message: '이메일 인증 링크를 확인해주세요.' }
 }
 
+/**
+ * 이메일 로그인 처리
+ * @description 이메일/비밀번호로 Supabase 인증 후 메인 페이지로 리다이렉트
+ * @param formData - email, password 포함
+ * @returns { error: string } 또는 redirect
+ */
 export async function signInWithEmail(formData: FormData) {
   const supabase = await createSupabaseServerClient()
 
@@ -83,12 +105,22 @@ export async function signInWithEmail(formData: FormData) {
   redirect('/ko')
 }
 
+/**
+ * 로그아웃 처리
+ * @description 세션 종료 후 메인 페이지로 리다이렉트
+ */
 export async function signOut() {
   const supabase = await createSupabaseServerClient()
   await supabase.auth.signOut()
   redirect('/ko')
 }
 
+/**
+ * 비밀번호 재설정 이메일 발송
+ * @description profiles 테이블에서 이메일 존재 여부 확인 후 Supabase 비밀번호 재설정 링크 전송
+ * @param formData - email 포함
+ * @returns { success: true } 또는 { error: string }
+ */
 export async function resetPasswordWithEmail(formData: FormData) {
   const supabase = await createSupabaseServerClient()
   const email = formData.get('email') as string
@@ -114,6 +146,12 @@ export async function resetPasswordWithEmail(formData: FormData) {
   return { success: true }
 }
 
+/**
+ * 비밀번호 변경 처리
+ * @description 새 비밀번호로 Supabase 사용자 정보 업데이트 후 로그인 페이지로 리다이렉트
+ * @param formData - password 포함
+ * @returns { error: string } 또는 redirect
+ */
 export async function updatePassword(formData: FormData) {
   const supabase = await createSupabaseServerClient()
   const password = formData.get('password') as string
@@ -124,6 +162,12 @@ export async function updatePassword(formData: FormData) {
   redirect('/ko/my/login?reset=done')
 }
 
+/**
+ * 전화번호 OTP 인증번호 발송
+ * @description Supabase SMS OTP 전송 요청
+ * @param phone - 국제 형식 전화번호 (예: +821012345678)
+ * @returns { success: true } 또는 { error: string }
+ */
 export async function signInWithPhone(phone: string) {
   const supabase = await createSupabaseServerClient()
   const { error } = await supabase.auth.signInWithOtp({ phone })
@@ -131,6 +175,13 @@ export async function signInWithPhone(phone: string) {
   return { success: true }
 }
 
+/**
+ * 전화번호 OTP 검증 및 로그인 처리
+ * @description OTP 확인 후 profiles 테이블 upsert (신규 가입 또는 phone_verified 업데이트) 후 메인 페이지로 리다이렉트
+ * @param phone - 국제 형식 전화번호
+ * @param token - SMS로 수신한 OTP 코드
+ * @returns { error: string } 또는 redirect
+ */
 export async function verifyPhoneOtp(phone: string, token: string) {
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' })

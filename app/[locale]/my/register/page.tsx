@@ -1,3 +1,8 @@
+/**
+ * @file 회원가입 페이지
+ * @description 이메일 폼 가입 및 Google OAuth 소셜 가입을 제공하는 클라이언트 컴포넌트
+ * @module auth
+ */
 'use client'
 
 import { useLocale } from 'next-intl'
@@ -8,12 +13,21 @@ import { signUpWithEmail } from '../actions'
 export default function RegisterPage() {
   const locale = useLocale()
   const isKo = locale === 'ko'
+
+  // ─── 상태 관리 ─────────────────────────────────────
   const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [countryCode, setCountryCode] = useState('+82')
 
+  // ─── 이벤트 핸들러 ──────────────────────────────────
+
+  /**
+   * 폼 제출 처리
+   * @description 비밀번호 길이 유효성 검사 후 signUpWithEmail 호출, 결과에 따라 성공/에러 상태 업데이트
+   * @param e - React form submit 이벤트
+   */
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!agreed) return
@@ -40,6 +54,11 @@ export default function RegisterPage() {
     setLoading(false)
   }
 
+  /**
+   * Google OAuth 소셜 가입 처리
+   * @description createBrowserClient로 Supabase 초기화 후 signInWithOAuth 호출 — 리다이렉트는 /api/auth/callback에서 처리
+   * @param provider - 'google'
+   */
   async function handleOAuth(provider: 'google') {
     const { createBrowserClient } = await import("@supabase/ssr")
     const supabase = createBrowserClient(
