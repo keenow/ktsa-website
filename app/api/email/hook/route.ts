@@ -6,24 +6,56 @@
  * @module auth
  */
 
+import { createHmac, timingSafeEqual } from "crypto"
 import { NextRequest, NextResponse } from "next/server"
+
+/**
+ * Svix HMAC-SHA256 방식으로 Supabase Auth Hook 서명 검증
+ * @param request - 수신된 NextRequest
+ * @param rawBody - 원본 요청 바디 문자열
+ * @returns 서명이 유효하면 true
+ */
+function verifyHookSignature(request: NextRequest, rawBody: string): boolean {
+  const secret = process.env.SUPABASE_HOOK_SECRET || ""
+  // v1,whsec_<base64> 또는 v1,<base64> 형식에서 base64 부분 추출
+  const base64Secret = secret.replace("v1,whsec_", "").replace("v1,", "")
+  const key = Buffer.from(base64Secret, "base64")
+
+  const msgId = request.headers.get("webhook-id") || ""
+  const msgTimestamp = request.headers.get("webhook-timestamp") || ""
+  const msgSignature = request.headers.get("webhook-signature") || ""
+
+  const toSign = `${msgId}.${msgTimestamp}.${rawBody}`
+  const hmac = createHmac("sha256", key).update(toSign).digest("base64")
+
+  // webhook-signature는 "v1,<sig1> v1,<sig2>" 형태일 수 있음
+  const expectedSig = `v1,${hmac}`
+  const sigs = msgSignature.split(" ")
+
+  return sigs.some((sig) => {
+    try {
+      return timingSafeEqual(Buffer.from(sig), Buffer.from(expectedSig))
+    } catch {
+      return false
+    }
+  })
+}
 
 /**
  * POST /api/email/hook
  * Supabase Auth Hook 수신 → Postmark로 인증 이메일 발송
- * Auth: SUPABASE_HOOK_SECRET Bearer 토큰 검증
+ * Auth: Svix HMAC-SHA256 서명 검증 (SUPABASE_HOOK_SECRET)
  * Returns: { message: string } | { error: string }
  */
 export async function POST(request: NextRequest) {
-  // ─── Hook 시크릿 검증 ────────────────────────────────
-  const authHeader = request.headers.get("authorization")
-  const hookSecret = process.env.SUPABASE_HOOK_SECRET
-  if (!hookSecret || authHeader !== `Bearer ${hookSecret}`) {
+  // ─── Hook 서명 검증 (Svix HMAC-SHA256) ───────────────
+  const rawBody = await request.text()
+  if (!verifyHookSignature(request, rawBody)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
   // ─── 페이로드 파싱 ───────────────────────────────────
-  const body = await request.json()
+  const body = JSON.parse(rawBody)
   const { user, email_data } = body
   // email_data: { token, token_hash, redirect_to, email_action_type, site_url, token_new, token_hash_new }
 
