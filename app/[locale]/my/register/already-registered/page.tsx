@@ -1,6 +1,6 @@
 /**
  * @file 이미 가입된 이메일 안내 페이지
- * @description 회원가입 시 동일 이메일이 이미 등록된 경우 로그인·인증 안내
+ * @description 회원가입 시 동일 이메일이 이미 등록된 경우 로그인·인증 안내 (재가입 유도 링크 없음)
  * @module auth
  */
 'use client'
@@ -11,7 +11,7 @@ import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
 
 /**
- * 쿼리 `email`을 표시하고 다음 행동(로그인·다른 이메일)을 안내
+ * 쿼리 `email`을 표시하고 로그인·홈으로 이동을 안내
  * @returns JSX.Element
  */
 function AlreadyRegisteredContent() {
@@ -55,12 +55,6 @@ function AlreadyRegisteredContent() {
             className="block w-full text-center bg-[#1e3a6e] text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-[#152d57] transition-colors"
           >
             {isKo ? '로그인하기' : 'Sign in'}
-          </Link>
-          <Link
-            href={`/${locale}/my/register`}
-            className="block w-full text-center border border-gray-200 rounded-lg py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-          >
-            {isKo ? '다른 이메일로 가입하기' : 'Sign up with another email'}
           </Link>
           <Link
             href={`/${locale}`}
