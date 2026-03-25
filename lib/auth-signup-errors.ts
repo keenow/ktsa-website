@@ -233,7 +233,10 @@ export function signUpFailureMessageKo(kind: SignUpFailureKind): string {
       return '현재 이메일 가입이 제한되어 있습니다. 관리자에게 문의해 주세요.'
     case 'email_invalid':
       return '이메일 형식을 확인해 주세요.'
-    default:
-      return '회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+    case 'unknown':
+      return (
+        '오류 유형: 미분류(unknown). Supabase 응답의 code·HTTP·message가 현재 분기 매핑에 없습니다. ' +
+        '일시적 장애가 아니라 매핑 누락일 수 있으니, 화면 하단 진단 블록과 Vercel 로그의 [signUpWithEmail] 항목을 확인해 주세요.'
+      )
   }
 }
