@@ -8,35 +8,13 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import {
+  classifyAuthSignUpError,
+  classifyPostgrestProfileInsertError,
+  signUpFailureMessageKo,
+} from '@/lib/auth-signup-errors'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { isProfileIncomplete } from '@/lib/profile-completion'
-
-/**
- * Supabase Auth/DB가 돌려주는 오류가 「이미 등록된 이메일」 상황인지 판별
- * @param err - Auth 오류 또는 PostgREST 오류 형태
- * @returns 중복 가입으로 처리할지 여부
- */
-function isDuplicateSignupError(err: {
-  message?: string
-  code?: string | number
-}): boolean {
-  const code = String(err.code ?? '').toLowerCase()
-  if (code.includes('already') || code === 'user_already_exists') return true
-  if (code === '23505') return true
-
-  const m = (err.message || '').toLowerCase()
-  if (m.includes('already registered')) return true
-  if (m.includes('already been registered')) return true
-  if (m.includes('user already exists')) return true
-  if (m.includes('email') && m.includes('already')) return true
-  if (m.includes('duplicate key')) return true
-  if (m.includes('unique constraint') || m.includes('unique violation')) return true
-  if (m.includes('database error saving new user')) return true
-  // 한국어/기타 로케일 메시지
-  if (m.includes('already') && m.includes('user')) return true
-  if (m.includes('이미') && (m.includes('가입') || m.includes('등록'))) return true
-  return false
-}
 
 /**
  * 이미 profiles에 동일 이메일(대소문자 무시)이 있으면 중복 가입으로 간주
@@ -101,10 +79,11 @@ export async function signUpWithEmail(formData: FormData) {
   const { data, error } = await supabase.auth.signUp({ email, password })
 
   if (error) {
-    if (isDuplicateSignupError(error)) {
+    const authKind = classifyAuthSignUpError(error)
+    if (authKind === 'duplicate_email') {
       return { alreadyRegistered: true as const, email }
     }
-    return { error: '회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
+    return { error: signUpFailureMessageKo(authKind) }
   }
 
   if (data.user) {
@@ -123,10 +102,11 @@ export async function signUpWithEmail(formData: FormData) {
       })
 
     if (profileError) {
-      if (isDuplicateSignupError(profileError)) {
+      const pgKind = classifyPostgrestProfileInsertError(profileError)
+      if (pgKind === 'profile_duplicate') {
         return { alreadyRegistered: true as const, email }
       }
-      return { error: '회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
+      return { error: signUpFailureMessageKo(pgKind) }
     }
   }
 
