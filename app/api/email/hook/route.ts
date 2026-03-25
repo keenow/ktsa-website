@@ -5,6 +5,9 @@
  *              수신된 이메일 데이터를 Postmark HTTP API로 전달한다.
  * @description 운영 스위치: `AUTH_EMAIL_HOOK_ENABLED=false` 이면 503으로 거절한다.
  *              이 경우 Supabase 대시보드에서 Send Email Hook URL을 비우거나 기본 발송으로 바꿔야 한다.
+ * @description 개발자 확인: Vercel Logs 등에서 `[api/email/hook]` 또는 `hook_inbound`·`postmark_sent` 검색.
+ *              Supabase/Svix와 대조할 때 `svixMessageId`(= webhook-id 헤더)를 사용한다.
+ *              원문 바디 로그가 필요하면 `LOG_AUTH_HOOK_BODY=true`.
  * @module auth
  */
 
@@ -44,6 +47,20 @@ function verifyHookSignature(request: NextRequest, rawBody: string): boolean {
 }
 
 /**
+ * 로그용 이메일 마스킹 (도메인은 유지)
+ * @param email - 원본 주소
+ * @returns 마스킹된 문자열
+ */
+function maskEmailForLog(email: string): string {
+  const at = email.indexOf('@')
+  if (at < 1) return '[redacted]'
+  const local = email.slice(0, at)
+  const domain = email.slice(at + 1)
+  const prefix = local.slice(0, Math.min(2, local.length))
+  return `${prefix}***@${domain}`
+}
+
+/**
  * POST /api/email/hook
  * Supabase Auth Hook 수신 → Postmark로 인증 이메일 발송
  * Auth: Svix HMAC-SHA256 서명 검증 (SUPABASE_HOOK_SECRET)
@@ -75,25 +92,65 @@ export async function POST(request: NextRequest) {
 
   // ─── Hook 서명 검증 (Svix HMAC-SHA256) ───────────────
   const rawBody = await request.text()
+  const svixMessageId = request.headers.get('webhook-id') || undefined
   const isValid = verifyHookSignature(request, rawBody)
   if (!isValid) {
     // NOTE: 디버깅 목적으로 임시 우회 — 검증 실패해도 진행
-    console.log("[Hook] 서명 검증 실패 — 디버깅 모드로 진행")
-    console.log("[Hook] Headers:", Object.fromEntries(request.headers.entries()))
+    console.warn(
+      '[api/email/hook]',
+      JSON.stringify({
+        event: 'signature_invalid_continuing',
+        svixMessageId,
+      })
+    )
+    console.log('[Hook] Headers:', Object.fromEntries(request.headers.entries()))
   }
-  console.log("[Hook] Body:", rawBody.substring(0, 500))
+  if (process.env.LOG_AUTH_HOOK_BODY === 'true') {
+    console.log('[api/email/hook] body_preview', rawBody.substring(0, 500))
+  }
 
   // ─── 페이로드 파싱 ───────────────────────────────────
-  const body = JSON.parse(rawBody)
+  type HookPayload = {
+    user?: { email?: string }
+    email_data?: {
+      email_action_type?: string
+      site_url?: string
+      token_hash?: string
+    }
+  }
+  let body: HookPayload
+  try {
+    body = JSON.parse(rawBody) as HookPayload
+  } catch {
+    console.warn(
+      '[api/email/hook]',
+      JSON.stringify({ event: 'json_parse_error', svixMessageId })
+    )
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+  }
   const { user, email_data } = body
   // email_data: { token, token_hash, redirect_to, email_action_type, site_url, token_new, token_hash_new }
 
   if (!user?.email || !email_data) {
+    console.warn(
+      '[api/email/hook]',
+      JSON.stringify({ event: 'invalid_payload', svixMessageId })
+    )
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 })
   }
 
   // ─── 이메일 타입별 제목/내용 설정 ───────────────────
   const actionType = email_data.email_action_type
+  console.info(
+    '[api/email/hook]',
+    JSON.stringify({
+      event: 'hook_inbound',
+      svixMessageId,
+      signatureValid: isValid,
+      actionType: actionType ?? 'unknown',
+      toMasked: maskEmailForLog(user.email),
+    })
+  )
   let subject = ""
   let htmlBody = ""
 
@@ -153,9 +210,25 @@ export async function POST(request: NextRequest) {
 
   if (!postmarkRes.ok) {
     const err = await postmarkRes.json()
-    console.error("Postmark 발송 실패:", err)
+    console.error('[api/email/hook]', JSON.stringify({
+      event: 'postmark_failed',
+      svixMessageId,
+      actionType,
+      toMasked: maskEmailForLog(user.email),
+      postmark: err,
+    }))
     return NextResponse.json({ error: "Email send failed" }, { status: 500 })
   }
+
+  console.info(
+    '[api/email/hook]',
+    JSON.stringify({
+      event: 'postmark_sent',
+      svixMessageId,
+      actionType,
+      toMasked: maskEmailForLog(user.email),
+    })
+  )
 
   return NextResponse.json({ message: "Email sent" }, { status: 200 })
 }
