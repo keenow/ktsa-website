@@ -15,6 +15,27 @@ import { isProfileIncomplete } from '@/lib/profile-completion'
  * 서버 컴포넌트 및 Server Action용 Supabase 클라이언트 생성
  * @returns Supabase 서버 클라이언트 인스턴스
  */
+/**
+ * Supabase Auth/DB가 돌려주는 오류가 「이미 등록된 이메일」 상황인지 판별
+ * @param err - Auth 오류 또는 PostgREST 오류 형태
+ * @returns 중복 가입으로 처리할지 여부
+ */
+function isDuplicateSignupError(err: {
+  message?: string
+  code?: string
+}): boolean {
+  const m = (err.message || '').toLowerCase()
+  if (m.includes('already registered')) return true
+  if (m.includes('already been registered')) return true
+  if (m.includes('user already exists')) return true
+  if (m.includes('email') && m.includes('already')) return true
+  if (m.includes('duplicate key') && m.includes('email')) return true
+  if (err.code === '23505') return true
+  // Supabase Auth가 동일 이메일 재가입 시 반환하는 메시지 (버전·설정에 따라 상이)
+  if (m.includes('database error saving new user')) return true
+  return false
+}
+
 async function createSupabaseServerClient() {
   const cookieStore = await cookies()
   return createServerClient(
@@ -40,20 +61,25 @@ async function createSupabaseServerClient() {
 /**
  * 이메일 회원가입 처리 (1단계: 이메일·비밀번호만)
  * @description Supabase Auth 계정 생성 후 profiles에 email만 채운 최소 행 INSERT. 이름·전화·생년월일은 인증 후 `completeProfile`에서 입력
- * @param formData - email, password
- * @returns { success: true } 또는 { error: string }
+ * @param formData - email, password, locale (선택)
+ * @returns { success: true } 또는 { error: string }; 이미 가입된 이메일이면 전용 페이지로 redirect
  */
 export async function signUpWithEmail(formData: FormData) {
   const supabase = await createSupabaseServerClient()
+  const locale = (formData.get('locale') as string) || 'ko'
 
-  const email = formData.get('email') as string
+  const email = (formData.get('email') as string)?.trim() || ''
   const password = formData.get('password') as string
 
   const { data, error } = await supabase.auth.signUp({ email, password })
 
   if (error) {
-    if (error.message.includes('already registered')) {
-      return { error: '이미 가입된 이메일입니다.' }
+    if (isDuplicateSignupError(error)) {
+      const q = new URLSearchParams()
+      if (email) q.set('email', email)
+      redirect(
+        `/${locale}/my/register/already-registered${q.toString() ? `?${q.toString()}` : ''}`
+      )
     }
     return { error: '회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
   }
@@ -74,6 +100,13 @@ export async function signUpWithEmail(formData: FormData) {
       })
 
     if (profileError) {
+      if (isDuplicateSignupError(profileError)) {
+        const q = new URLSearchParams()
+        if (email) q.set('email', email)
+        redirect(
+          `/${locale}/my/register/already-registered${q.toString() ? `?${q.toString()}` : ''}`
+        )
+      }
       return { error: '회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
     }
   }

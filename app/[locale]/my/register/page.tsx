@@ -145,6 +145,7 @@ export default function RegisterPage() {
           </h1>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
+            <input type="hidden" name="locale" value={locale} />
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {isKo ? '이메일' : 'Email'} <span className="text-red-400">*</span>
