@@ -158,6 +158,7 @@ const AUTH_CODE_WEAK_PASSWORD = new Set(['weak_password', 'same_password'])
 
 const AUTH_CODE_RATE_LIMIT = new Set([
   'over_request_rate_limit',
+  'over_email_send_rate_limit',
   'too_many_requests',
   'rate_limit_exceeded',
 ])
@@ -278,6 +279,29 @@ export function signUpFailureKindLabel(
     unknown: 'Unclassified',
   }
   return locale === 'ko' ? ko[kind] : en[kind]
+}
+
+/**
+ * 가입 실패 시 사용자에게 보여 줄 한국어 본문 (스냅샷으로 세분화)
+ * @param kind - 분류
+ * @param snapshot - `over_email_send_rate_limit` 등 code 기반 보조 문구
+ * @returns 한국어 안내
+ */
+export function signUpFailureDisplayMessageKo(
+  kind: SignUpFailureKind,
+  snapshot?: SignUpErrorSnapshot
+): string {
+  if (kind === 'rate_limited' && snapshot?.code) {
+    const c = String(snapshot.code).toLowerCase().trim()
+    if (c === 'over_email_send_rate_limit') {
+      return (
+        '가입 확인 메일 발송이 Supabase 이메일 전송 한도에 걸렸습니다. ' +
+        '수 분~수십 분 뒤 다시 시도하고, 스팸함·이미 도착한 인증 메일을 먼저 확인해 주세요. ' +
+        '같은 주소로 가입·「인증 메일 다시 보내기」를 반복하면 이 제한에 더 빨리 도달할 수 있습니다.'
+      )
+    }
+  }
+  return signUpFailureMessageKo(kind)
 }
 
 export function signUpFailureMessageKo(kind: SignUpFailureKind): string {

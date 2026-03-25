@@ -14,7 +14,7 @@ import {
   type SignUpFailureKind,
   type SignUpWithEmailResult,
   snapshotAuthOrDbError,
-  signUpFailureMessageKo,
+  signUpFailureDisplayMessageKo,
 } from '@/lib/auth-signup-errors'
 import { newCorrelationId } from '@/lib/correlation-id'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -61,7 +61,7 @@ function signUpFailurePayload(
     })
   )
   return {
-    error: signUpFailureMessageKo(kind),
+    error: signUpFailureDisplayMessageKo(kind, snapshot),
     errorDetail: { correlationId, source, classified: kind, snapshot },
   }
 }
