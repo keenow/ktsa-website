@@ -7,7 +7,8 @@
  *              이 경우 Supabase 대시보드에서 Send Email Hook URL을 비우거나 기본 발송으로 바꿔야 한다.
  * @description 개발자 확인: Vercel Logs 등에서 `[api/email/hook]` 또는 `hook_inbound`·`postmark_sent` 검색.
  *              Supabase/Svix와 대조할 때 `svixMessageId`(= webhook-id 헤더)를 사용한다.
- *              원문 바디 로그가 필요하면 `LOG_AUTH_HOOK_BODY=true`.
+ *              원문 바디 앞 2048자 로그가 필요하면 `LOG_AUTH_HOOK_BODY=true`.
+ *              단계별 추적 로그(Warning): `DEBUG_AUTH_HOOK=true` → `trace`·`step`으로 수신·서명·파싱·Postmark 응답까지 기록.
  * @module auth
  */
 
@@ -61,6 +62,29 @@ function maskEmailForLog(email: string): string {
 }
 
 /**
+ * Auth 이메일 훅 단계 로그 (DEBUG_AUTH_HOOK=true 일 때만)
+ * @param svixMessageId - webhook-id 헤더, 초기 단계에서는 undefined 가능
+ * @param step - 파이프라인 단계 식별자
+ * @param detail - 추가 필드(민감값 제외)
+ */
+function traceAuthHook(
+  svixMessageId: string | undefined,
+  step: string,
+  detail?: Record<string, unknown>
+) {
+  if (process.env.DEBUG_AUTH_HOOK !== 'true') return
+  console.warn(
+    '[api/email/hook]',
+    JSON.stringify({
+      trace: 'auth_hook',
+      step,
+      svixMessageId,
+      ...detail,
+    })
+  )
+}
+
+/**
  * POST /api/email/hook
  * Supabase Auth Hook 수신 → Postmark로 인증 이메일 발송
  * Auth: Svix HMAC-SHA256 서명 검증 (SUPABASE_HOOK_SECRET)
@@ -72,6 +96,7 @@ export async function POST(request: NextRequest) {
     process.env.AUTH_EMAIL_HOOK_ENABLED === 'false' ||
     process.env.AUTH_EMAIL_HOOK_ENABLED === '0'
   if (disabled) {
+    traceAuthHook(undefined, 'blocked_disabled')
     console.warn(
       '[api/email/hook] AUTH_EMAIL_HOOK_ENABLED=false — 훅 비활성. Supabase에서 Send Email Hook을 끄지 않으면 가입 메일이 나가지 않습니다.'
     )
@@ -83,6 +108,7 @@ export async function POST(request: NextRequest) {
 
   const postmarkToken = process.env.POSTMARK_SERVER_TOKEN?.trim()
   if (!postmarkToken) {
+    traceAuthHook(undefined, 'blocked_no_postmark_token')
     console.error('[api/email/hook] POSTMARK_SERVER_TOKEN 없음')
     return NextResponse.json(
       { error: 'Email provider not configured' },
@@ -93,7 +119,9 @@ export async function POST(request: NextRequest) {
   // ─── Hook 서명 검증 (Svix HMAC-SHA256) ───────────────
   const rawBody = await request.text()
   const svixMessageId = request.headers.get('webhook-id') || undefined
+  traceAuthHook(svixMessageId, 'hook_received', { bodyBytes: rawBody.length })
   const isValid = verifyHookSignature(request, rawBody)
+  traceAuthHook(svixMessageId, 'signature_checked', { valid: isValid })
   if (!isValid) {
     // NOTE: 디버깅 목적으로 임시 우회 — 검증 실패해도 진행
     console.warn(
@@ -106,7 +134,7 @@ export async function POST(request: NextRequest) {
     console.log('[Hook] Headers:', Object.fromEntries(request.headers.entries()))
   }
   if (process.env.LOG_AUTH_HOOK_BODY === 'true') {
-    console.log('[api/email/hook] body_preview', rawBody.substring(0, 500))
+    console.log('[api/email/hook] body_preview', rawBody.substring(0, 2048))
   }
 
   // ─── 페이로드 파싱 ───────────────────────────────────
@@ -122,16 +150,22 @@ export async function POST(request: NextRequest) {
   try {
     body = JSON.parse(rawBody) as HookPayload
   } catch {
+    traceAuthHook(svixMessageId, 'json_parse_failed')
     console.warn(
       '[api/email/hook]',
       JSON.stringify({ event: 'json_parse_error', svixMessageId })
     )
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
+  traceAuthHook(svixMessageId, 'json_parsed')
   const { user, email_data } = body
   // email_data: { token, token_hash, redirect_to, email_action_type, site_url, token_new, token_hash_new }
 
   if (!user?.email || !email_data) {
+    traceAuthHook(svixMessageId, 'payload_invalid', {
+      hasUserEmail: Boolean(user?.email),
+      hasEmailData: Boolean(email_data),
+    })
     console.warn(
       '[api/email/hook]',
       JSON.stringify({ event: 'invalid_payload', svixMessageId })
@@ -141,6 +175,10 @@ export async function POST(request: NextRequest) {
 
   // ─── 이메일 타입별 제목/내용 설정 ───────────────────
   const actionType = email_data.email_action_type
+  traceAuthHook(svixMessageId, 'payload_ok', {
+    actionType: actionType ?? 'unknown',
+    toMasked: maskEmailForLog(user.email),
+  })
   console.info(
     '[api/email/hook]',
     JSON.stringify({
@@ -192,6 +230,10 @@ export async function POST(request: NextRequest) {
   }
 
   // ─── Postmark HTTP API 발송 ──────────────────────────
+  traceAuthHook(svixMessageId, 'postmark_request_start', {
+    actionType: actionType ?? 'unknown',
+    toMasked: maskEmailForLog(user.email),
+  })
   const postmarkRes = await fetch("https://api.postmarkapp.com/email", {
     method: "POST",
     headers: {
@@ -208,8 +250,24 @@ export async function POST(request: NextRequest) {
     }),
   })
 
+  let postmarkErrorBody: unknown
   if (!postmarkRes.ok) {
-    const err = await postmarkRes.json()
+    try {
+      postmarkErrorBody = await postmarkRes.json()
+    } catch {
+      postmarkErrorBody = { parseError: true }
+    }
+    traceAuthHook(svixMessageId, 'postmark_response', {
+      httpStatus: postmarkRes.status,
+      ok: false,
+      errorCode:
+        postmarkErrorBody &&
+        typeof postmarkErrorBody === 'object' &&
+        'ErrorCode' in postmarkErrorBody
+          ? (postmarkErrorBody as { ErrorCode?: number }).ErrorCode
+          : undefined,
+    })
+    const err = postmarkErrorBody
     console.error('[api/email/hook]', JSON.stringify({
       event: 'postmark_failed',
       svixMessageId,
@@ -220,6 +278,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Email send failed" }, { status: 500 })
   }
 
+  traceAuthHook(svixMessageId, 'postmark_response', {
+    httpStatus: postmarkRes.status,
+    ok: true,
+  })
   console.info(
     '[api/email/hook]',
     JSON.stringify({
