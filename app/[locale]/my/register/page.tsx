@@ -7,6 +7,7 @@
 
 import { useLocale } from 'next-intl'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { signUpWithEmail } from '../actions'
 
@@ -16,6 +17,7 @@ import { signUpWithEmail } from '../actions'
  */
 export default function RegisterPage() {
   const locale = useLocale()
+  const router = useRouter()
   const isKo = locale === 'ko'
 
   // ─── 상태 관리 ─────────────────────────────────────
@@ -46,6 +48,15 @@ export default function RegisterPage() {
     }
 
     const result = await signUpWithEmail(formData)
+    if (result && 'alreadyRegistered' in result && result.alreadyRegistered) {
+      const qs = new URLSearchParams()
+      if (result.email) qs.set('email', result.email)
+      router.push(
+        `/${locale}/my/register/already-registered${qs.toString() ? `?${qs.toString()}` : ''}`
+      )
+      setLoading(false)
+      return
+    }
     if (result?.error) {
       setError(result.error)
     } else if (result?.success) {

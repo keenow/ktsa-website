@@ -12,30 +12,53 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { isProfileIncomplete } from '@/lib/profile-completion'
 
 /**
- * 서버 컴포넌트 및 Server Action용 Supabase 클라이언트 생성
- * @returns Supabase 서버 클라이언트 인스턴스
- */
-/**
  * Supabase Auth/DB가 돌려주는 오류가 「이미 등록된 이메일」 상황인지 판별
  * @param err - Auth 오류 또는 PostgREST 오류 형태
  * @returns 중복 가입으로 처리할지 여부
  */
 function isDuplicateSignupError(err: {
   message?: string
-  code?: string
+  code?: string | number
 }): boolean {
+  const code = String(err.code ?? '').toLowerCase()
+  if (code.includes('already') || code === 'user_already_exists') return true
+  if (code === '23505') return true
+
   const m = (err.message || '').toLowerCase()
   if (m.includes('already registered')) return true
   if (m.includes('already been registered')) return true
   if (m.includes('user already exists')) return true
   if (m.includes('email') && m.includes('already')) return true
-  if (m.includes('duplicate key') && m.includes('email')) return true
-  if (err.code === '23505') return true
-  // Supabase Auth가 동일 이메일 재가입 시 반환하는 메시지 (버전·설정에 따라 상이)
+  if (m.includes('duplicate key')) return true
+  if (m.includes('unique constraint') || m.includes('unique violation')) return true
   if (m.includes('database error saving new user')) return true
+  // 한국어/기타 로케일 메시지
+  if (m.includes('already') && m.includes('user')) return true
+  if (m.includes('이미') && (m.includes('가입') || m.includes('등록'))) return true
   return false
 }
 
+/**
+ * 이미 profiles에 동일 이메일(대소문자 무시)이 있으면 중복 가입으로 간주
+ * @param email - 입력 이메일
+ * @returns 기존 행이 있으면 true
+ */
+async function profileExistsForEmail(email: string): Promise<boolean> {
+  const trimmed = email.trim()
+  if (!trimmed) return false
+  const { data, error } = await supabaseAdmin
+    .from('profiles')
+    .select('id')
+    .ilike('email', trimmed)
+    .maybeSingle()
+  if (error) return false
+  return !!data
+}
+
+/**
+ * Server Action·서버 컴포넌트용 Supabase 클라이언트 생성
+ * @returns Supabase 서버 클라이언트 인스턴스
+ */
 async function createSupabaseServerClient() {
   const cookieStore = await cookies()
   return createServerClient(
@@ -62,24 +85,24 @@ async function createSupabaseServerClient() {
  * 이메일 회원가입 처리 (1단계: 이메일·비밀번호만)
  * @description Supabase Auth 계정 생성 후 profiles에 email만 채운 최소 행 INSERT. 이름·전화·생년월일은 인증 후 `completeProfile`에서 입력
  * @param formData - email, password, locale (선택)
- * @returns { success: true } 또는 { error: string }; 이미 가입된 이메일이면 전용 페이지로 redirect
+ * @returns { success: true } | { error: string } | { alreadyRegistered: true, email }; 중복은 클라이언트에서 라우팅
  */
 export async function signUpWithEmail(formData: FormData) {
   const supabase = await createSupabaseServerClient()
-  const locale = (formData.get('locale') as string) || 'ko'
 
   const email = (formData.get('email') as string)?.trim() || ''
   const password = formData.get('password') as string
+
+  // NOTE: Auth 오류 문구가 환경마다 달라 redirect만으로는 놓칠 수 있음 — profiles 선조회 + 클라이언트 router.push 병행
+  if (await profileExistsForEmail(email)) {
+    return { alreadyRegistered: true as const, email }
+  }
 
   const { data, error } = await supabase.auth.signUp({ email, password })
 
   if (error) {
     if (isDuplicateSignupError(error)) {
-      const q = new URLSearchParams()
-      if (email) q.set('email', email)
-      redirect(
-        `/${locale}/my/register/already-registered${q.toString() ? `?${q.toString()}` : ''}`
-      )
+      return { alreadyRegistered: true as const, email }
     }
     return { error: '회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
   }
@@ -101,11 +124,7 @@ export async function signUpWithEmail(formData: FormData) {
 
     if (profileError) {
       if (isDuplicateSignupError(profileError)) {
-        const q = new URLSearchParams()
-        if (email) q.set('email', email)
-        redirect(
-          `/${locale}/my/register/already-registered${q.toString() ? `?${q.toString()}` : ''}`
-        )
+        return { alreadyRegistered: true as const, email }
       }
       return { error: '회원가입 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
     }
