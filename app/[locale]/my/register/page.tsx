@@ -1,6 +1,6 @@
 /**
  * @file 회원가입 페이지
- * @description 이메일 폼 가입 및 Google OAuth 소셜 가입을 제공하는 클라이언트 컴포넌트
+ * @description 1단계: 이메일·비밀번호·약관으로 계정 생성. Google OAuth 병행. 상세 프로필은 인증 후 `/my/complete-profile`
  * @module auth
  */
 'use client'
@@ -10,6 +10,10 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { signUpWithEmail } from '../actions'
 
+/**
+ * 회원가입 1단계 화면 — 이메일·비밀번호·Google OAuth·약관 동의
+ * @returns JSX.Element
+ */
 export default function RegisterPage() {
   const locale = useLocale()
   const isKo = locale === 'ko'
@@ -19,14 +23,13 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [countryCode, setCountryCode] = useState('+82')
 
   // ─── 이벤트 핸들러 ──────────────────────────────────
 
   /**
-   * 폼 제출 처리
-   * @description 비밀번호 길이 유효성 검사 후 signUpWithEmail 호출, 결과에 따라 성공/에러 상태 업데이트
-   * @param e - React form submit 이벤트
+   * 이메일·비밀번호 폼 제출 (1단계 가입)
+   * @param e - `React.FormEvent<HTMLFormElement>`
+   * @returns void
    */
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -42,22 +45,23 @@ export default function RegisterPage() {
       return
     }
 
-    // country code 추가
-    formData.set('phone_country_code', countryCode)
-
     const result = await signUpWithEmail(formData)
     if (result?.error) {
       setError(result.error)
     } else if (result?.success) {
-      setSuccess(isKo ? '이메일 인증 링크를 확인해주세요.' : 'Please check your email to verify your account.')
+      setSuccess(
+        isKo
+          ? '등록하신 이메일로 인증 안내가 발송됩니다. 몇 분 내로 오지 않으면 스팸함을 확인해 주세요. 인증 후 로그인하시면 이름·생년월일·휴대전화를 입력하는 화면이 이어집니다.'
+          : 'We will send verification instructions to your email. If nothing arrives in a few minutes, check your spam folder. After you verify and sign in, you will be asked for your name, birth date, and phone number.'
+      )
     }
     setLoading(false)
   }
 
   /**
    * Google OAuth 소셜 가입 처리
-   * @description createBrowserClient로 Supabase 초기화 후 signInWithOAuth 호출 — 리다이렉트는 /api/auth/callback에서 처리
-   * @param provider - 'google'
+   * @param provider - `'google'`
+   * @returns void
    */
   async function handleOAuth(provider: 'google') {
     const { createBrowserClient } = await import("@supabase/ssr")
@@ -71,13 +75,15 @@ export default function RegisterPage() {
     })
   }
 
+  // ─── 렌더링 ─────────────────────────────────────────
+
   if (success) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <div className="w-full max-w-sm bg-white rounded-2xl border border-gray-200 shadow-sm p-8 text-center">
           <div className="text-4xl mb-4">✉️</div>
-          <h2 className="text-lg font-bold text-gray-900 mb-2">{isKo ? '가입을 완료해주세요' : 'Verify your email'}</h2>
-          <p className="text-sm text-gray-500 mb-6">{success}</p>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">{isKo ? '이메일을 확인해 주세요' : 'Check your email'}</h2>
+          <p className="text-sm text-gray-500 mb-6 text-left leading-relaxed">{success}</p>
           <Link href={`/${locale}/my/login`} className="text-sm text-[#1e3a6e] font-semibold hover:underline">
             {isKo ? '로그인 페이지로 이동' : 'Go to login'}
           </Link>
@@ -128,41 +134,17 @@ export default function RegisterPage() {
               {isKo ? '준회원' : 'Associate'}
             </span>
             <p className="text-xs text-gray-600 leading-relaxed break-keep">
-              {isKo ? '가입 후 마이페이지에서 정회원 업그레이드 가능' : 'Upgrade to Regular after sign-up'}
+              {isKo
+                ? '먼저 이메일로 계정을 만든 뒤, 메일 인증 → 로그인 후 추가 정보를 입력합니다.'
+                : 'Create your account with email first; after you verify and sign in, you will complete your profile.'}
             </p>
           </div>
 
           <h1 className="text-xl font-bold text-gray-900 mb-5">
-            {isKo ? '이메일로 가입' : 'Sign up with Email'}
+            {isKo ? '이메일로 가입 (1단계)' : 'Sign up with email (step 1)'}
           </h1>
 
           <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 gap-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {isKo ? '이름' : 'Name'} <span className="text-red-400">*</span>
-                </label>
-                <input
-                  name="name"
-                  type="text"
-                  required
-                  placeholder={isKo ? '홍길동' : 'Full Name'}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a6e]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {isKo ? '생년월일' : 'Birth Date'} <span className="text-red-400">*</span>
-                </label>
-                <input
-                  name="birth_date"
-                  type="date"
-                  required
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a6e]"
-                />
-              </div>
-            </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {isKo ? '이메일' : 'Email'} <span className="text-red-400">*</span>
@@ -174,35 +156,6 @@ export default function RegisterPage() {
                 placeholder="example@email.com"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a6e]"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {isKo ? '휴대전화' : 'Phone'} <span className="text-red-400">*</span>
-              </label>
-              <div className="flex gap-2">
-                <select
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  className="w-28 shrink-0 border border-gray-300 rounded-lg px-2 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a6e] bg-white"
-                >
-                  <option value="+82">🇰🇷 +82</option>
-                  <option value="+1">🇺🇸 +1</option>
-                  <option value="+81">🇯🇵 +81</option>
-                  <option value="+86">🇨🇳 +86</option>
-                  <option value="+44">🇬🇧 +44</option>
-                  <option value="+49">🇩🇪 +49</option>
-                  <option value="+33">🇫🇷 +33</option>
-                  <option value="+61">🇦🇺 +61</option>
-                </select>
-                <input
-                  name="phone"
-                  type="tel"
-                  required
-                  placeholder={countryCode === '+82' ? '010-0000-0000' : '555-0000'}
-                  className="flex-1 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a6e]"
-                />
-              </div>
             </div>
 
             <div>
@@ -246,7 +199,7 @@ export default function RegisterPage() {
               disabled={!agreed || loading}
               className="w-full bg-[#1e3a6e] text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-[#152d57] transition-colors disabled:opacity-40 disabled:cursor-not-allowed mt-1"
             >
-              {loading ? '...' : isKo ? '준회원으로 가입' : 'Join as Associate'}
+              {loading ? '...' : isKo ? '계정 만들기' : 'Create account'}
             </button>
           </form>
         </div>

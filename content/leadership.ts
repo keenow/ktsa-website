@@ -1,20 +1,10 @@
 /**
- * 임원진·조직도 콘텐츠 (KTSA 공식 조직도 기준)
+ * 임원진·거버넌스 텍스트 콘텐츠
  * 인사·직책 변경 시 이 파일만 수정하면 됩니다.
+ * NOTE: 조직도 시각화는 `content/org-structure.ts` + `OrgChart` 컴포넌트를 사용합니다.
  */
 
 export type Locale = "ko" | "en";
-
-export const leadershipOrgChart = {
-  /** 공식 조직도 그래픽 (`public/` 기준) */
-  imageSrc: "/org-chart-official.png",
-  width: 1024,
-  height: 874,
-  alt: {
-    ko: "KTSA 조직도 — 대한트레일스포츠협회",
-    en: "KTSA organizational structure — Korea Trail Sports Association",
-  },
-} as const;
 
 /** 상단 거버넌스 구조 (라벨만) */
 export const governanceLevels = [
@@ -153,10 +143,6 @@ export function getOrgMemberLine(m: OrgMember, locale: Locale) {
   return locale === "ko"
     ? `${m.nameKo} (${m.affiliationKo})`
     : `${m.nameEn} (${m.affiliationEn})`;
-}
-
-export function getOrgChartAlt(locale: Locale) {
-  return leadershipOrgChart.alt[locale];
 }
 
 export function getCommitteeItems(section: CommitteeSection, locale: Locale) {

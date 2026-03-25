@@ -11,6 +11,7 @@ import { useLocale } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { isProfileIncomplete } from "@/lib/profile-completion";
 
 type MembershipGrade = "general" | "member" | "admin";
 
@@ -54,9 +55,20 @@ export default function MyDashboard() {
       // NOTE: createBrowserClient 사용 — 일반 회원 본인 프로필 조회는 RLS 허용 범위
       const { data } = await supabase
         .from("profiles")
-        .select("name, email, membership_grade")
+        .select("name, email, membership_grade, birth_date, phone")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
+
+      if (
+        isProfileIncomplete({
+          name: data?.name ?? null,
+          birth_date: data?.birth_date ?? null,
+          phone: data?.phone ?? null,
+        })
+      ) {
+        router.replace(`/${locale}/my/complete-profile`);
+        return;
+      }
 
       setProfile({
         name: data?.name ?? null,
@@ -65,7 +77,7 @@ export default function MyDashboard() {
       });
       setLoading(false);
     })();
-  }, [router]);
+  }, [router, locale]);
 
   // ─── 이벤트 핸들러 ──────────────────────────────────
 

@@ -134,7 +134,7 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
     const phone = formatPhoneE164(phoneNumber, countryCode)
-    const result = await verifyPhoneOtp(phone, otp)
+    const result = await verifyPhoneOtp(phone, otp, locale)
     if (result?.error) {
       setError(result.error)
     }
@@ -302,6 +302,7 @@ export default function LoginPage() {
 
           {loginTab === 'email' ? (
             <form className="space-y-4" onSubmit={handleSubmit}>
+              <input type="hidden" name="locale" value={locale} />
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {isKo ? '이메일' : 'Email'}

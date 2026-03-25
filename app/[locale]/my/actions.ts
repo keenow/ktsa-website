@@ -9,6 +9,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { isProfileIncomplete } from '@/lib/profile-completion'
 
 /**
  * 서버 컴포넌트 및 Server Action용 Supabase 클라이언트 생성
@@ -37,9 +38,9 @@ async function createSupabaseServerClient() {
 }
 
 /**
- * 이메일 회원가입 처리
- * @description Supabase Auth 계정 생성 후 profiles 테이블에 사용자 정보 INSERT
- * @param formData - email, password, name, phone, phone_country_code, birth_date 포함
+ * 이메일 회원가입 처리 (1단계: 이메일·비밀번호만)
+ * @description Supabase Auth 계정 생성 후 profiles에 email만 채운 최소 행 INSERT. 이름·전화·생년월일은 인증 후 `completeProfile`에서 입력
+ * @param formData - email, password
  * @returns { success: true } 또는 { error: string }
  */
 export async function signUpWithEmail(formData: FormData) {
@@ -47,10 +48,6 @@ export async function signUpWithEmail(formData: FormData) {
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
-  const name = formData.get('name') as string
-  const phone = formData.get('phone') as string | null
-  const phone_country_code = formData.get('phone_country_code') as string | null
-  const birth_date = formData.get('birth_date') as string | null
 
   const { data, error } = await supabase.auth.signUp({ email, password })
 
@@ -68,10 +65,10 @@ export async function signUpWithEmail(formData: FormData) {
       .insert({
         id: data.user.id,
         email,
-        name,
-        phone: phone || null,
-        phone_country_code: phone_country_code || '+82',
-        birth_date: birth_date || null,
+        name: null,
+        phone: null,
+        phone_country_code: '+82',
+        birth_date: null,
         membership_grade: 'general',
         is_active: true,
       })
@@ -81,17 +78,61 @@ export async function signUpWithEmail(formData: FormData) {
     }
   }
 
-  return { success: true, message: '이메일 인증 링크를 확인해주세요.' }
+  return { success: true, message: '이메일 인증 안내가 발송됩니다.' }
+}
+
+/**
+ * 로그인 후 프로필 필수 항목 보완
+ * @description 이름·생년월일·휴대전화를 저장한 뒤 마이페이지로 이동 (RLS — 본인 행만 UPDATE)
+ * @param formData - name, birth_date, phone, phone_country_code, locale
+ * @returns { error: string } 또는 redirect
+ */
+export async function completeProfile(formData: FormData) {
+  const supabase = await createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    return { error: '로그인이 필요합니다. 다시 로그인해 주세요.' }
+  }
+
+  const locale = (formData.get('locale') as string) || 'ko'
+  const name = String(formData.get('name') || '').trim()
+  const birth_date = String(formData.get('birth_date') || '').trim()
+  const phone = String(formData.get('phone') || '').trim()
+  const phone_country_code =
+    (formData.get('phone_country_code') as string) || '+82'
+
+  if (!name || !birth_date || !phone) {
+    return { error: '이름, 생년월일, 휴대전화를 모두 입력해 주세요.' }
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      name,
+      birth_date,
+      phone,
+      phone_country_code,
+    })
+    .eq('id', user.id)
+
+  if (error) {
+    return { error: '프로필 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.' }
+  }
+
+  redirect(`/${locale}/my/dashboard`)
 }
 
 /**
  * 이메일 로그인 처리
- * @description 이메일/비밀번호로 Supabase 인증 후 메인 페이지로 리다이렉트
- * @param formData - email, password 포함
+ * @description 이메일/비밀번호로 Supabase 인증 후 프로필 미완성이면 보완 페이지로, 아니면 마이페이지로 리다이렉트
+ * @param formData - email, password, locale (선택, 기본 ko)
  * @returns { error: string } 또는 redirect
  */
 export async function signInWithEmail(formData: FormData) {
   const supabase = await createSupabaseServerClient()
+  const locale = (formData.get('locale') as string) || 'ko'
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
@@ -102,7 +143,24 @@ export async function signInWithEmail(formData: FormData) {
     return { error: '이메일 또는 비밀번호가 올바르지 않습니다.' }
   }
 
-  redirect('/ko')
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    redirect(`/${locale}/my/login`)
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, birth_date, phone')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (isProfileIncomplete(profile)) {
+    redirect(`/${locale}/my/complete-profile`)
+  }
+
+  redirect(`/${locale}/my/dashboard`)
 }
 
 /**
@@ -177,14 +235,23 @@ export async function signInWithPhone(phone: string) {
 
 /**
  * 전화번호 OTP 검증 및 로그인 처리
- * @description OTP 확인 후 profiles 테이블 upsert (신규 가입 또는 phone_verified 업데이트) 후 메인 페이지로 리다이렉트
+ * @description OTP 확인 후 profiles upsert. 프로필 필수 항목이 부족하면 보완 페이지로 이동
  * @param phone - 국제 형식 전화번호
  * @param token - SMS로 수신한 OTP 코드
+ * @param locale - 리다이렉트용 로케일 (기본 ko)
  * @returns { error: string } 또는 redirect
  */
-export async function verifyPhoneOtp(phone: string, token: string) {
+export async function verifyPhoneOtp(
+  phone: string,
+  token: string,
+  locale: string = 'ko'
+) {
   const supabase = await createSupabaseServerClient()
-  const { data, error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' })
+  const { data, error } = await supabase.auth.verifyOtp({
+    phone,
+    token,
+    type: 'sms',
+  })
   if (error) return { error: '인증번호가 올바르지 않습니다. 다시 확인해주세요.' }
 
   if (data.user) {
@@ -202,5 +269,22 @@ export async function verifyPhoneOtp(phone: string, token: string) {
     )
   }
 
-  redirect('/ko')
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) {
+    redirect(`/${locale}/my/login`)
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, birth_date, phone')
+    .eq('id', user.id)
+    .maybeSingle()
+
+  if (isProfileIncomplete(profile)) {
+    redirect(`/${locale}/my/complete-profile`)
+  }
+
+  redirect(`/${locale}/my/dashboard`)
 }
