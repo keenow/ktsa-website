@@ -95,6 +95,8 @@ export default function RegisterPage() {
     if (result && 'alreadyRegistered' in result && result.alreadyRegistered) {
       const qs = new URLSearchParams()
       if (result.email) qs.set('email', result.email)
+      qs.set('reason', result.reason)
+      qs.set('cid', result.correlationId)
       router.push(
         `/${locale}/my/register/already-registered${qs.toString() ? `?${qs.toString()}` : ''}`
       )

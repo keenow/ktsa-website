@@ -9,6 +9,10 @@ import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Suspense } from 'react'
+import {
+  parseSignUpAlreadyRegisteredReason,
+  signUpAlreadyRegisteredReasonLabel,
+} from '@/lib/auth-signup-errors'
 
 /**
  * 쿼리 `email`을 표시하고 로그인·홈으로 이동을 안내
@@ -19,6 +23,9 @@ function AlreadyRegisteredContent() {
   const isKo = locale === 'ko'
   const searchParams = useSearchParams()
   const email = searchParams.get('email')?.trim() || ''
+  const reasonRaw = searchParams.get('reason')
+  const cid = searchParams.get('cid')?.trim() || ''
+  const reason = parseSignUpAlreadyRegisteredReason(reasonRaw)
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
@@ -48,6 +55,33 @@ function AlreadyRegisteredContent() {
               : 'Sign in with the same email and password on the login page. If you have not verified your email yet, check your inbox and spam folder for the verification message.'}
           </p>
         </div>
+
+        {(reason || cid || (reasonRaw && !reason)) && (
+          <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-3 text-left text-[11px] font-mono leading-relaxed text-gray-700 break-all space-y-1">
+            <p className="font-sans text-xs font-semibold text-gray-800">
+              {isKo
+                ? '가입 시도 진단 (Server Action 리턴·URL 쿼리와 동일)'
+                : 'Sign-up attempt diagnostics (matches Server Action return / URL query)'}
+            </p>
+            {reason ? (
+              <p>
+                reason: {reason} —{' '}
+                {signUpAlreadyRegisteredReasonLabel(reason, isKo ? 'ko' : 'en')}
+              </p>
+            ) : reasonRaw ? (
+              <p>
+                reason: {reasonRaw}{' '}
+                {isKo ? '(알 수 없는 값)' : '(unknown value)'}
+              </p>
+            ) : null}
+            {cid ? <p>correlationId: {cid}</p> : null}
+            <p className="font-sans text-[10px] text-gray-500 pt-1">
+              {isKo
+                ? 'Vercel 로그에서 [signUpWithEmail]과 correlationId로 대조할 수 있습니다.'
+                : 'Match correlationId with [signUpWithEmail] lines in Vercel logs.'}
+            </p>
+          </div>
+        )}
 
         <div className="flex flex-col gap-2">
           <Link

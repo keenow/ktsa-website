@@ -103,13 +103,28 @@ export async function signUpWithEmail(
 ): Promise<SignUpWithEmailResult> {
   try {
     const supabase = await createSupabaseServerClient()
+    const correlationId = newCorrelationId()
 
     const email = (formData.get('email') as string)?.trim() || ''
     const password = formData.get('password') as string
 
     // NOTE: Auth 오류 문구가 환경마다 달라 redirect만으로는 놓칠 수 있음 — profiles 선조회 + 클라이언트 router.push 병행
     if (await profileExistsForEmail(email)) {
-      return { alreadyRegistered: true as const, email }
+      console.error(
+        '[signUpWithEmail]',
+        JSON.stringify({
+          correlationId,
+          source: 'profile',
+          reason: 'profile_precheck',
+          note: 'redirect_already_registered',
+        })
+      )
+      return {
+        alreadyRegistered: true as const,
+        email,
+        reason: 'profile_precheck',
+        correlationId,
+      }
     }
 
     const { data, error } = await supabase.auth.signUp({ email, password })
@@ -121,14 +136,20 @@ export async function signUpWithEmail(
         console.error(
           '[signUpWithEmail]',
           JSON.stringify({
-            correlationId: newCorrelationId(),
+            correlationId,
             source: 'auth',
             classified: authKind,
+            reason: 'auth_duplicate',
             note: 'redirect_already_registered',
             snapshot,
           })
         )
-        return { alreadyRegistered: true as const, email }
+        return {
+          alreadyRegistered: true as const,
+          email,
+          reason: 'auth_duplicate',
+          correlationId,
+        }
       }
       return signUpFailurePayload('auth', authKind, error)
     }
@@ -155,14 +176,20 @@ export async function signUpWithEmail(
           console.error(
             '[signUpWithEmail]',
             JSON.stringify({
-              correlationId: newCorrelationId(),
+              correlationId,
               source: 'profile',
               classified: pgKind,
+              reason: 'profile_insert_duplicate',
               note: 'redirect_already_registered',
               snapshot,
             })
           )
-          return { alreadyRegistered: true as const, email }
+          return {
+            alreadyRegistered: true as const,
+            email,
+            reason: 'profile_insert_duplicate',
+            correlationId,
+          }
         }
         return signUpFailurePayload('profile', pgKind, profileError)
       }

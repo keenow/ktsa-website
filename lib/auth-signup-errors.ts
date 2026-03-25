@@ -33,10 +33,70 @@ export type SignUpEmailErrorDetail = {
   snapshot: SignUpErrorSnapshot
 }
 
+/** `alreadyRegistered` 분기: 어떤 경로에서 중복으로 판단했는지 (진단·URL 쿼리용) */
+export type SignUpAlreadyRegisteredReason =
+  | 'profile_precheck'
+  | 'auth_duplicate'
+  | 'profile_insert_duplicate'
+
+const SIGN_UP_ALREADY_REGISTERED_REASONS = new Set<SignUpAlreadyRegisteredReason>([
+  'profile_precheck',
+  'auth_duplicate',
+  'profile_insert_duplicate',
+])
+
+/**
+ * 쿼리 `reason` 문자열을 안전히 파싱
+ * @param raw - URLSearchParams.get('reason')
+ * @returns 유효한 값만, 아니면 null
+ */
+export function parseSignUpAlreadyRegisteredReason(
+  raw: string | null
+): SignUpAlreadyRegisteredReason | null {
+  if (!raw) return null
+  const t = raw.trim()
+  if (SIGN_UP_ALREADY_REGISTERED_REASONS.has(t as SignUpAlreadyRegisteredReason)) {
+    return t as SignUpAlreadyRegisteredReason
+  }
+  return null
+}
+
+/**
+ * 이미 가입 분기 사유 라벨 (진단 블록)
+ * @param reason - 서버가 내려준 reason
+ * @param locale - ko | en
+ * @returns 짧은 설명
+ */
+export function signUpAlreadyRegisteredReasonLabel(
+  reason: SignUpAlreadyRegisteredReason,
+  locale: 'ko' | 'en'
+): string {
+  const ko: Record<SignUpAlreadyRegisteredReason, string> = {
+    profile_precheck:
+      'profiles 선조회: 동일 이메일 행이 이미 있음 (Auth 호출 전 차단)',
+    auth_duplicate: 'Supabase Auth signUp: 중복 이메일·계정으로 거부',
+    profile_insert_duplicate:
+      'Auth는 성공했으나 profiles INSERT 시 유니크 충돌(레이스·잔존 행 등)',
+  }
+  const en: Record<SignUpAlreadyRegisteredReason, string> = {
+    profile_precheck:
+      'profiles pre-check: row with this email exists (blocked before Auth)',
+    auth_duplicate: 'Supabase Auth signUp rejected as duplicate email/account',
+    profile_insert_duplicate:
+      'Auth succeeded but profiles INSERT hit unique constraint',
+  }
+  return locale === 'ko' ? ko[reason] : en[reason]
+}
+
 export type SignUpWithEmailResult =
   | { success: true; message?: string }
   | { error: string; errorDetail: SignUpEmailErrorDetail }
-  | { alreadyRegistered: true; email: string }
+  | {
+      alreadyRegistered: true
+      email: string
+      reason: SignUpAlreadyRegisteredReason
+      correlationId: string
+    }
 
 type ErrShape = {
   message?: string
