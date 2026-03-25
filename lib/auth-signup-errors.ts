@@ -27,7 +27,8 @@ export type SignUpErrorSnapshot = {
 /** signUpWithEmail 실패 시 클라이언트에 내려 대조·문의용으로 쓰는 메타 */
 export type SignUpEmailErrorDetail = {
   correlationId: string
-  source: 'auth' | 'profile'
+  /** auth·profile: Supabase 응답 / server: 서버 액션 미처리 예외 / client: 브라우저 호출 실패 */
+  source: 'auth' | 'profile' | 'server' | 'client'
   classified: SignUpFailureKind
   snapshot: SignUpErrorSnapshot
 }

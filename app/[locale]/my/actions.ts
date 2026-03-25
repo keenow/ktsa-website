@@ -5,7 +5,6 @@
  */
 'use server'
 
-import { randomUUID } from 'crypto'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -17,6 +16,7 @@ import {
   snapshotAuthOrDbError,
   signUpFailureMessageKo,
 } from '@/lib/auth-signup-errors'
+import { newCorrelationId } from '@/lib/correlation-id'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { isProfileIncomplete } from '@/lib/profile-completion'
 
@@ -38,10 +38,6 @@ async function profileExistsForEmail(email: string): Promise<boolean> {
 }
 
 /**
- * Server Action·서버 컴포넌트용 Supabase 클라이언트 생성
- * @returns Supabase 서버 클라이언트 인스턴스
- */
-/**
  * 가입 실패 시 로그 남기고 클라이언트용 진단 객체와 함께 반환
  * @param source - auth | profile
  * @param kind - 분류 결과
@@ -53,7 +49,7 @@ function signUpFailurePayload(
   kind: SignUpFailureKind,
   err: unknown
 ): Extract<SignUpWithEmailResult, { error: string }> {
-  const correlationId = randomUUID()
+  const correlationId = newCorrelationId()
   const snapshot = snapshotAuthOrDbError(err)
   console.error(
     '[signUpWithEmail]',
@@ -70,6 +66,10 @@ function signUpFailurePayload(
   }
 }
 
+/**
+ * Server Action·RSC용 Supabase 클라이언트 (쿠키 연동)
+ * @returns Supabase 서버 클라이언트
+ */
 async function createSupabaseServerClient() {
   const cookieStore = await cookies()
   return createServerClient(
@@ -101,73 +101,104 @@ async function createSupabaseServerClient() {
 export async function signUpWithEmail(
   formData: FormData
 ): Promise<SignUpWithEmailResult> {
-  const supabase = await createSupabaseServerClient()
+  try {
+    const supabase = await createSupabaseServerClient()
 
-  const email = (formData.get('email') as string)?.trim() || ''
-  const password = formData.get('password') as string
+    const email = (formData.get('email') as string)?.trim() || ''
+    const password = formData.get('password') as string
 
-  // NOTE: Auth 오류 문구가 환경마다 달라 redirect만으로는 놓칠 수 있음 — profiles 선조회 + 클라이언트 router.push 병행
-  if (await profileExistsForEmail(email)) {
-    return { alreadyRegistered: true as const, email }
-  }
-
-  const { data, error } = await supabase.auth.signUp({ email, password })
-
-  if (error) {
-    const authKind = classifyAuthSignUpError(error)
-    const snapshot = snapshotAuthOrDbError(error)
-    if (authKind === 'duplicate_email') {
-      console.error(
-        '[signUpWithEmail]',
-        JSON.stringify({
-          correlationId: randomUUID(),
-          source: 'auth',
-          classified: authKind,
-          note: 'redirect_already_registered',
-          snapshot,
-        })
-      )
+    // NOTE: Auth 오류 문구가 환경마다 달라 redirect만으로는 놓칠 수 있음 — profiles 선조회 + 클라이언트 router.push 병행
+    if (await profileExistsForEmail(email)) {
       return { alreadyRegistered: true as const, email }
     }
-    return signUpFailurePayload('auth', authKind, error)
-  }
 
-  if (data.user) {
-    // NOTE: supabaseAdmin 사용 — profiles INSERT는 RLS 정책상 일반 클라이언트로 불가
-    const { error: profileError } = await supabaseAdmin
-      .from('profiles')
-      .insert({
-        id: data.user.id,
-        email,
-        name: null,
-        phone: null,
-        phone_country_code: '+82',
-        birth_date: null,
-        membership_grade: 'general',
-        is_active: true,
-      })
+    const { data, error } = await supabase.auth.signUp({ email, password })
 
-    if (profileError) {
-      const pgKind = classifyPostgrestProfileInsertError(profileError)
-      const snapshot = snapshotAuthOrDbError(profileError)
-      if (pgKind === 'profile_duplicate') {
+    if (error) {
+      const authKind = classifyAuthSignUpError(error)
+      const snapshot = snapshotAuthOrDbError(error)
+      if (authKind === 'duplicate_email') {
         console.error(
           '[signUpWithEmail]',
           JSON.stringify({
-            correlationId: randomUUID(),
-            source: 'profile',
-            classified: pgKind,
+            correlationId: newCorrelationId(),
+            source: 'auth',
+            classified: authKind,
             note: 'redirect_already_registered',
             snapshot,
           })
         )
         return { alreadyRegistered: true as const, email }
       }
-      return signUpFailurePayload('profile', pgKind, profileError)
+      return signUpFailurePayload('auth', authKind, error)
+    }
+
+    if (data.user) {
+      // NOTE: supabaseAdmin 사용 — profiles INSERT는 RLS 정책상 일반 클라이언트로 불가
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          id: data.user.id,
+          email,
+          name: null,
+          phone: null,
+          phone_country_code: '+82',
+          birth_date: null,
+          membership_grade: 'general',
+          is_active: true,
+        })
+
+      if (profileError) {
+        const pgKind = classifyPostgrestProfileInsertError(profileError)
+        const snapshot = snapshotAuthOrDbError(profileError)
+        if (pgKind === 'profile_duplicate') {
+          console.error(
+            '[signUpWithEmail]',
+            JSON.stringify({
+              correlationId: newCorrelationId(),
+              source: 'profile',
+              classified: pgKind,
+              note: 'redirect_already_registered',
+              snapshot,
+            })
+          )
+          return { alreadyRegistered: true as const, email }
+        }
+        return signUpFailurePayload('profile', pgKind, profileError)
+      }
+    }
+
+    return { success: true, message: '이메일 인증 안내가 발송됩니다.' }
+  } catch (e: unknown) {
+    const correlationId = newCorrelationId()
+    const partial = snapshotAuthOrDbError(e)
+    const message =
+      partial.message ||
+      (e instanceof Error
+        ? e.message
+        : typeof e === 'string'
+          ? e
+          : '알 수 없는 오류')
+    const snapshot = {
+      ...partial,
+      message,
+      name: partial.name ?? (e instanceof Error ? e.name : undefined),
+    }
+    console.error(
+      '[signUpWithEmail][uncaught]',
+      JSON.stringify({ correlationId, snapshot })
+    )
+    return {
+      error:
+        '회원가입 처리 중 예기치 않은 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+      errorDetail: {
+        correlationId,
+        source: 'server',
+        classified: 'unknown',
+        snapshot,
+      },
     }
   }
-
-  return { success: true, message: '이메일 인증 안내가 발송됩니다.' }
 }
 
 /**

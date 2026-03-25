@@ -9,8 +9,9 @@ import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import type { SignUpEmailErrorDetail } from '@/lib/auth-signup-errors'
+import type { SignUpEmailErrorDetail, SignUpWithEmailResult } from '@/lib/auth-signup-errors'
 import { signUpFailureKindLabel } from '@/lib/auth-signup-errors'
+import { newCorrelationId } from '@/lib/correlation-id'
 import { signUpWithEmail } from '../actions'
 
 /**
@@ -52,7 +53,45 @@ export default function RegisterPage() {
       return
     }
 
-    const result = await signUpWithEmail(formData)
+    let result: SignUpWithEmailResult | undefined
+    try {
+      result = await signUpWithEmail(formData)
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e)
+      setError(
+        isKo
+          ? '브라우저에서 서버로 요청을 전달하지 못했습니다. 네트워크·광고 차단·인앱 브라우저 여부를 확인해 주세요.'
+          : 'Your browser could not complete the request. Check network, blockers, or in-app browser limits.'
+      )
+      setErrorDetail({
+        correlationId: newCorrelationId(),
+        source: 'client',
+        classified: 'unknown',
+        snapshot: {
+          message: msg,
+          name: e instanceof Error ? e.name : 'Error',
+        },
+      })
+      setLoading(false)
+      return
+    }
+
+    if (result === undefined) {
+      setError(
+        isKo
+          ? '서버 응답이 비어 있습니다. 잠시 후 다시 시도해 주세요.'
+          : 'Empty response from server. Please try again.'
+      )
+      setErrorDetail({
+        correlationId: newCorrelationId(),
+        source: 'client',
+        classified: 'unknown',
+        snapshot: { message: 'result === undefined' },
+      })
+      setLoading(false)
+      return
+    }
+
     if (result && 'alreadyRegistered' in result && result.alreadyRegistered) {
       const qs = new URLSearchParams()
       if (result.email) qs.set('email', result.email)
