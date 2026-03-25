@@ -5,12 +5,16 @@
  */
 'use server'
 
+import { randomUUID } from 'crypto'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import {
   classifyAuthSignUpError,
   classifyPostgrestProfileInsertError,
+  type SignUpFailureKind,
+  type SignUpWithEmailResult,
+  snapshotAuthOrDbError,
   signUpFailureMessageKo,
 } from '@/lib/auth-signup-errors'
 import { supabaseAdmin } from '@/lib/supabase-admin'
@@ -37,6 +41,35 @@ async function profileExistsForEmail(email: string): Promise<boolean> {
  * Server Action·서버 컴포넌트용 Supabase 클라이언트 생성
  * @returns Supabase 서버 클라이언트 인스턴스
  */
+/**
+ * 가입 실패 시 로그 남기고 클라이언트용 진단 객체와 함께 반환
+ * @param source - auth | profile
+ * @param kind - 분류 결과
+ * @param err - 원본 오류
+ * @returns error + errorDetail
+ */
+function signUpFailurePayload(
+  source: 'auth' | 'profile',
+  kind: SignUpFailureKind,
+  err: unknown
+): Extract<SignUpWithEmailResult, { error: string }> {
+  const correlationId = randomUUID()
+  const snapshot = snapshotAuthOrDbError(err)
+  console.error(
+    '[signUpWithEmail]',
+    JSON.stringify({
+      correlationId,
+      source,
+      classified: kind,
+      snapshot,
+    })
+  )
+  return {
+    error: signUpFailureMessageKo(kind),
+    errorDetail: { correlationId, source, classified: kind, snapshot },
+  }
+}
+
 async function createSupabaseServerClient() {
   const cookieStore = await cookies()
   return createServerClient(
@@ -63,9 +96,11 @@ async function createSupabaseServerClient() {
  * 이메일 회원가입 처리 (1단계: 이메일·비밀번호만)
  * @description Supabase Auth 계정 생성 후 profiles에 email만 채운 최소 행 INSERT. 이름·전화·생년월일은 인증 후 `completeProfile`에서 입력
  * @param formData - email, password, locale (선택)
- * @returns { success: true } | { error: string } | { alreadyRegistered: true, email }; 중복은 클라이언트에서 라우팅
+ * @returns 성공 / 진단 포함 실패 / 이미 가입(전용 페이지)
  */
-export async function signUpWithEmail(formData: FormData) {
+export async function signUpWithEmail(
+  formData: FormData
+): Promise<SignUpWithEmailResult> {
   const supabase = await createSupabaseServerClient()
 
   const email = (formData.get('email') as string)?.trim() || ''
@@ -80,10 +115,21 @@ export async function signUpWithEmail(formData: FormData) {
 
   if (error) {
     const authKind = classifyAuthSignUpError(error)
+    const snapshot = snapshotAuthOrDbError(error)
     if (authKind === 'duplicate_email') {
+      console.error(
+        '[signUpWithEmail]',
+        JSON.stringify({
+          correlationId: randomUUID(),
+          source: 'auth',
+          classified: authKind,
+          note: 'redirect_already_registered',
+          snapshot,
+        })
+      )
       return { alreadyRegistered: true as const, email }
     }
-    return { error: signUpFailureMessageKo(authKind) }
+    return signUpFailurePayload('auth', authKind, error)
   }
 
   if (data.user) {
@@ -103,10 +149,21 @@ export async function signUpWithEmail(formData: FormData) {
 
     if (profileError) {
       const pgKind = classifyPostgrestProfileInsertError(profileError)
+      const snapshot = snapshotAuthOrDbError(profileError)
       if (pgKind === 'profile_duplicate') {
+        console.error(
+          '[signUpWithEmail]',
+          JSON.stringify({
+            correlationId: randomUUID(),
+            source: 'profile',
+            classified: pgKind,
+            note: 'redirect_already_registered',
+            snapshot,
+          })
+        )
         return { alreadyRegistered: true as const, email }
       }
-      return { error: signUpFailureMessageKo(pgKind) }
+      return signUpFailurePayload('profile', pgKind, profileError)
     }
   }
 

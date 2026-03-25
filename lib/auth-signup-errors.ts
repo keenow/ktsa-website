@@ -14,6 +14,29 @@ export type SignUpFailureKind =
   | 'profile_duplicate'
   | 'unknown'
 
+/** Supabase Auth / PostgREST 오류에서 뽑은 원본 필드 (로그·화면 진단용) */
+export type SignUpErrorSnapshot = {
+  message: string
+  code?: string
+  status?: number
+  name?: string
+  details?: string
+  hint?: string
+}
+
+/** signUpWithEmail 실패 시 클라이언트에 내려 대조·문의용으로 쓰는 메타 */
+export type SignUpEmailErrorDetail = {
+  correlationId: string
+  source: 'auth' | 'profile'
+  classified: SignUpFailureKind
+  snapshot: SignUpErrorSnapshot
+}
+
+export type SignUpWithEmailResult =
+  | { success: true; message?: string }
+  | { error: string; errorDetail: SignUpEmailErrorDetail }
+  | { alreadyRegistered: true; email: string }
+
 type ErrShape = {
   message?: string
   code?: string | number
@@ -25,6 +48,32 @@ type ErrShape = {
  * @param err - throw/catch 또는 Supabase error
  * @returns message, code, status
  */
+/**
+ * Supabase·PostgREST 오류 객체에서 로그/UI용 스냅샷 생성
+ * @param err - AuthError / PostgrestError 유사 객체
+ * @returns message·code·status·Postgres hint 등
+ */
+export function snapshotAuthOrDbError(err: unknown): SignUpErrorSnapshot {
+  const n = normalizeError(err)
+  let name: string | undefined
+  let details: string | undefined
+  let hint: string | undefined
+  if (err && typeof err === 'object') {
+    const e = err as Record<string, unknown>
+    if (typeof e.name === 'string') name = e.name
+    if (typeof e.details === 'string') details = e.details
+    if (typeof e.hint === 'string') hint = e.hint
+  }
+  return {
+    message: n.message ?? '',
+    code: n.code !== undefined ? String(n.code) : undefined,
+    status: n.status,
+    name,
+    details,
+    hint,
+  }
+}
+
 function normalizeError(err: unknown): ErrShape {
   if (!err || typeof err !== 'object') return {}
   const e = err as Record<string, unknown>
@@ -139,6 +188,37 @@ export function classifyPostgrestProfileInsertError(err: unknown): SignUpFailure
  * @param kind - 분류 결과
  * @returns 한국어 안내 문구
  */
+/**
+ * 실패 분류 라벨 (진단 블록 표시용)
+ * @param kind - 분류
+ * @param locale - ko | en
+ * @returns 짧은 라벨
+ */
+export function signUpFailureKindLabel(
+  kind: SignUpFailureKind,
+  locale: 'ko' | 'en'
+): string {
+  const ko: Record<SignUpFailureKind, string> = {
+    duplicate_email: '중복 이메일 (인증)',
+    profile_duplicate: '중복 키 (프로필 DB)',
+    weak_password: '비밀번호 정책',
+    rate_limited: '요청 횟수 제한',
+    signup_disabled: '가입 비활성',
+    email_invalid: '이메일 형식',
+    unknown: '미분류',
+  }
+  const en: Record<SignUpFailureKind, string> = {
+    duplicate_email: 'Duplicate email (Auth)',
+    profile_duplicate: 'Unique violation (Profile DB)',
+    weak_password: 'Password policy',
+    rate_limited: 'Rate limited',
+    signup_disabled: 'Sign up disabled',
+    email_invalid: 'Invalid email',
+    unknown: 'Unclassified',
+  }
+  return locale === 'ko' ? ko[kind] : en[kind]
+}
+
 export function signUpFailureMessageKo(kind: SignUpFailureKind): string {
   switch (kind) {
     case 'duplicate_email':

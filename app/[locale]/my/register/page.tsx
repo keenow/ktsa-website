@@ -9,6 +9,8 @@ import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import type { SignUpEmailErrorDetail } from '@/lib/auth-signup-errors'
+import { signUpFailureKindLabel } from '@/lib/auth-signup-errors'
 import { signUpWithEmail } from '../actions'
 
 /**
@@ -23,6 +25,7 @@ export default function RegisterPage() {
   // ─── 상태 관리 ─────────────────────────────────────
   const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [errorDetail, setErrorDetail] = useState<SignUpEmailErrorDetail | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -38,11 +41,13 @@ export default function RegisterPage() {
     if (!agreed) return
     setLoading(true)
     setError(null)
+    setErrorDetail(null)
 
     const formData = new FormData(e.currentTarget)
     const password = formData.get('password') as string
     if (password.length < 8) {
       setError(isKo ? '비밀번호는 8자 이상이어야 합니다.' : 'Password must be at least 8 characters.')
+      setErrorDetail(null)
       setLoading(false)
       return
     }
@@ -57,9 +62,12 @@ export default function RegisterPage() {
       setLoading(false)
       return
     }
-    if (result?.error) {
+    if (result && 'error' in result && result.error) {
       setError(result.error)
-    } else if (result?.success) {
+      setErrorDetail(
+        'errorDetail' in result ? result.errorDetail : null
+      )
+    } else if (result && 'success' in result && result.success) {
       setSuccess(
         isKo
           ? '등록하신 이메일로 인증 안내가 발송됩니다. 몇 분 내로 오지 않으면 스팸함을 확인해 주세요. 인증 후 로그인하시면 이름·생년월일·휴대전화를 입력하는 화면이 이어집니다.'
@@ -201,8 +209,47 @@ export default function RegisterPage() {
             </label>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 space-y-2">
                 <p className="text-red-600 text-xs">{error}</p>
+                {errorDetail && (
+                  <div className="border-t border-red-100 pt-2 mt-1 text-[11px] text-gray-700 font-mono leading-relaxed break-all space-y-1">
+                    <p className="font-sans font-semibold text-gray-800 text-xs">
+                      {isKo
+                        ? '진단 정보 (Vercel 로그·문의 시 이 ID로 대조)'
+                        : 'Diagnostics (match this ID in Vercel logs)'}
+                    </p>
+                    <p>correlationId: {errorDetail.correlationId}</p>
+                    <p>
+                      {isKo ? '출처' : 'source'}: {errorDetail.source}
+                    </p>
+                    <p>
+                      {isKo ? '분류' : 'class'}:{' '}
+                      {signUpFailureKindLabel(
+                        errorDetail.classified,
+                        isKo ? 'ko' : 'en'
+                      )}{' '}
+                      ({errorDetail.classified})
+                    </p>
+                    {errorDetail.snapshot.code ? (
+                      <p>code: {errorDetail.snapshot.code}</p>
+                    ) : null}
+                    {errorDetail.snapshot.status != null ? (
+                      <p>HTTP: {errorDetail.snapshot.status}</p>
+                    ) : null}
+                    {errorDetail.snapshot.name ? (
+                      <p>name: {errorDetail.snapshot.name}</p>
+                    ) : null}
+                    {errorDetail.snapshot.message ? (
+                      <p>message: {errorDetail.snapshot.message}</p>
+                    ) : null}
+                    {errorDetail.snapshot.details ? (
+                      <p>details: {errorDetail.snapshot.details}</p>
+                    ) : null}
+                    {errorDetail.snapshot.hint ? (
+                      <p>hint: {errorDetail.snapshot.hint}</p>
+                    ) : null}
+                  </div>
+                )}
               </div>
             )}
 
