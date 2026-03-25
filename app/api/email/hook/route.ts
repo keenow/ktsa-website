@@ -3,6 +3,8 @@
  * @description Supabase가 인증 이메일(가입 확인, 비밀번호 재설정 등)을
  *              발송하려 할 때 이 라우트를 호출한다.
  *              수신된 이메일 데이터를 Postmark HTTP API로 전달한다.
+ * @description 운영 스위치: `AUTH_EMAIL_HOOK_ENABLED=false` 이면 503으로 거절한다.
+ *              이 경우 Supabase 대시보드에서 Send Email Hook URL을 비우거나 기본 발송으로 바꿔야 한다.
  * @module auth
  */
 
@@ -48,6 +50,29 @@ function verifyHookSignature(request: NextRequest, rawBody: string): boolean {
  * Returns: { message: string } | { error: string }
  */
 export async function POST(request: NextRequest) {
+  // ─── 기능 스위치 (Vercel·로컬 env) ───────────────────
+  const disabled =
+    process.env.AUTH_EMAIL_HOOK_ENABLED === 'false' ||
+    process.env.AUTH_EMAIL_HOOK_ENABLED === '0'
+  if (disabled) {
+    console.warn(
+      '[api/email/hook] AUTH_EMAIL_HOOK_ENABLED=false — 훅 비활성. Supabase에서 Send Email Hook을 끄지 않으면 가입 메일이 나가지 않습니다.'
+    )
+    return NextResponse.json(
+      { error: 'Auth email hook disabled by configuration' },
+      { status: 503 }
+    )
+  }
+
+  const postmarkToken = process.env.POSTMARK_SERVER_TOKEN?.trim()
+  if (!postmarkToken) {
+    console.error('[api/email/hook] POSTMARK_SERVER_TOKEN 없음')
+    return NextResponse.json(
+      { error: 'Email provider not configured' },
+      { status: 500 }
+    )
+  }
+
   // ─── Hook 서명 검증 (Svix HMAC-SHA256) ───────────────
   const rawBody = await request.text()
   const isValid = verifyHookSignature(request, rawBody)
@@ -115,7 +140,7 @@ export async function POST(request: NextRequest) {
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
-      "X-Postmark-Server-Token": process.env.POSTMARK_SERVER_TOKEN!,
+      "X-Postmark-Server-Token": postmarkToken,
     },
     body: JSON.stringify({
       From: "noreply@trailkorea.org",
