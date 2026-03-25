@@ -229,6 +229,73 @@ export async function signUpWithEmail(
 }
 
 /**
+ * 가입 확인(이메일 인증) 메일 재발송
+ * @description Supabase Auth `resend` type `signup`. 미인증 상태에서 확인 메일을 다시 받을 때 사용
+ * @param email - 가입에 사용한 주소
+ * @param locale - `ko` | `en` (확인 링크의 `emailRedirectTo` 경로)
+ * @returns `{ success, message }` 또는 `{ error }` (문구는 locale에 맞춤)
+ */
+export async function resendSignupVerificationEmail(
+  email: string,
+  locale: string
+): Promise<{ success: true; message: string } | { error: string }> {
+  const trimmed = (email ?? '').trim()
+  const loc = locale === 'en' ? 'en' : 'ko'
+  const msg = {
+    invalid:
+      loc === 'en'
+        ? 'Please enter a valid email address.'
+        : '유효한 이메일 주소를 입력해 주세요.',
+    success:
+      loc === 'en'
+        ? 'We sent another verification email. Check your inbox and spam folder.'
+        : '인증 메일을 다시 보냈습니다. 받은편지함·스팸함을 확인해 주세요.',
+    generic:
+      loc === 'en'
+        ? 'Could not send the verification email. Please try again later.'
+        : '인증 메일 발송 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+    rate:
+      loc === 'en'
+        ? 'Too many requests. Please wait and try again.'
+        : '요청이 너무 잦습니다. 잠시 후 다시 시도해 주세요.',
+  }
+
+  if (!trimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
+    return { error: msg.invalid }
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://trailkorea.org'
+
+  try {
+    const supabase = await createSupabaseServerClient()
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: trimmed,
+      options: {
+        emailRedirectTo: `${siteUrl}/${loc}/my/login`,
+      },
+    })
+
+    if (error) {
+      const low = (error.message ?? '').toLowerCase()
+      console.error('[resendSignupVerificationEmail]', error.message)
+      if (
+        low.includes('rate') ||
+        low.includes('too many') ||
+        error.status === 429
+      ) {
+        return { error: msg.rate }
+      }
+      return { error: msg.generic }
+    }
+    return { success: true, message: msg.success }
+  } catch (e: unknown) {
+    console.error('[resendSignupVerificationEmail][uncaught]', e)
+    return { error: msg.generic }
+  }
+}
+
+/**
  * 로그인 후 프로필 필수 항목 보완
  * @description 이름·생년월일·휴대전화를 저장한 뒤 마이페이지로 이동 (RLS — 본인 행만 UPDATE)
  * @param formData - name, birth_date, phone, phone_country_code, locale

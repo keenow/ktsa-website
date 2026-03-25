@@ -1,6 +1,6 @@
 /**
  * @file 이미 가입된 이메일 안내 페이지
- * @description 회원가입 시 동일 이메일이 이미 등록된 경우 로그인·인증 안내 (재가입 유도 링크 없음)
+ * @description 중복 이메일 안내, 인증 메일 재발송, 진단 쿼리(reason·cid) 표시 (재가입 유도 링크 없음)
  * @module auth
  */
 'use client'
@@ -8,7 +8,8 @@
 import { useLocale } from 'next-intl'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
+import { resendSignupVerificationEmail } from '../../actions'
 import {
   parseSignUpAlreadyRegisteredReason,
   signUpAlreadyRegisteredReasonLabel,
@@ -26,6 +27,29 @@ function AlreadyRegisteredContent() {
   const reasonRaw = searchParams.get('reason')
   const cid = searchParams.get('cid')?.trim() || ''
   const reason = parseSignUpAlreadyRegisteredReason(reasonRaw)
+
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendNotice, setResendNotice] = useState<{
+    kind: 'success' | 'error'
+    text: string
+  } | null>(null)
+
+  /**
+   * 가입 확인 메일 재발송 (쿼리의 email 기준)
+   * @returns void
+   */
+  async function handleResendVerification() {
+    if (!email || resendLoading) return
+    setResendLoading(true)
+    setResendNotice(null)
+    const result = await resendSignupVerificationEmail(email, locale)
+    setResendLoading(false)
+    if ('error' in result) {
+      setResendNotice({ kind: 'error', text: result.error })
+      return
+    }
+    setResendNotice({ kind: 'success', text: result.message })
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
@@ -48,12 +72,45 @@ function AlreadyRegisteredContent() {
           </p>
         )}
 
-        <div className="text-sm text-gray-500 space-y-3 mb-8 leading-relaxed">
+        <div className="text-sm text-gray-500 space-y-3 mb-6 leading-relaxed">
           <p>
             {isKo
               ? '로그인 페이지에서 같은 이메일과 비밀번호로 로그인해 주세요. 아직 이메일 인증을 하지 않았다면, 받은편지함·스팸함에서 인증 메일을 확인해 주세요.'
               : 'Sign in with the same email and password on the login page. If you have not verified your email yet, check your inbox and spam folder for the verification message.'}
           </p>
+        </div>
+
+        <div className="mb-6">
+          <button
+            type="button"
+            disabled={!email || resendLoading}
+            onClick={() => void handleResendVerification()}
+            className="w-full rounded-lg border border-[#1e3a6e] py-2.5 text-sm font-semibold text-[#1e3a6e] hover:bg-[#f0f3f9] transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {resendLoading
+              ? '...'
+              : isKo
+                ? '인증 메일 다시 보내기'
+                : 'Resend verification email'}
+          </button>
+          {!email ? (
+            <p className="mt-2 text-center text-xs text-gray-400">
+              {isKo
+                ? '이메일 주소가 URL에 없어 재발송할 수 없습니다. 가입 페이지에서 다시 시도해 주세요.'
+                : 'No email in the URL; open this page from the sign-up flow to resend.'}
+            </p>
+          ) : null}
+          {resendNotice ? (
+            <p
+              className={
+                resendNotice.kind === 'success'
+                  ? 'mt-2 text-center text-xs text-emerald-700'
+                  : 'mt-2 text-center text-xs text-red-600'
+              }
+            >
+              {resendNotice.text}
+            </p>
+          ) : null}
         </div>
 
         {(reason || cid || (reasonRaw && !reason)) && (
