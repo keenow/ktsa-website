@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
       "X-Postmark-Server-Token": postmarkToken,
     },
     body: JSON.stringify({
-      From: "noreply@trailkorea.org",
+      From: "noreply@trailservice.net",
       To: user.email,
       Subject: subject,
       HtmlBody: htmlBody,
