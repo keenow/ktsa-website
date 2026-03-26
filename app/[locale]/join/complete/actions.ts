@@ -1,6 +1,6 @@
 /**
  * @file 온보딩 프로필 저장 Server Action
- * @description 이메일 인증 완료 후 추가 프로필 정보(이름·전화번호·생년월일·성별·클럽)를
+ * @description 이메일 인증 완료 후 추가 프로필 정보(이름·전화번호·생년월일·성별)를
  *              supabaseAdmin으로 profiles 테이블에 UPDATE 한다.
  * @module auth
  */
@@ -14,7 +14,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin"
 /**
  * 온보딩 프로필 저장
  * @param _prev - 이전 상태 (useActionState 호환)
- * @param formData - 폼 데이터 (name, phone, birth_date, gender, club)
+ * @param formData - 폼 데이터 (name, phone, birth_date, gender)
  * @returns 에러 메시지 문자열, 또는 성공 시 redirect
  */
 export async function saveOnboardingProfile(
@@ -37,7 +37,6 @@ export async function saveOnboardingProfile(
   const phone = (formData.get("phone") as string | null)?.trim()
   const birth_date = (formData.get("birth_date") as string | null)?.trim()
   const gender = (formData.get("gender") as string | null)?.trim()
-  const club = (formData.get("club") as string | null)?.trim() || null
 
   if (!name) return "이름을 입력해주세요."
   if (!phone) return "전화번호를 입력해주세요."
@@ -62,7 +61,7 @@ export async function saveOnboardingProfile(
   // NOTE: profiles INSERT/UPDATE는 반드시 supabaseAdmin 사용 (RLS 정책 때문)
   const { error: updateError } = await supabaseAdmin
     .from("profiles")
-    .update({ name, phone, birth_date, gender, club })
+    .update({ name, phone, birth_date, gender })
     .eq("id", user.id)
 
   if (updateError) {

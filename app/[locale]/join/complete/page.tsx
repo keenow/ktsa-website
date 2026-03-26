@@ -1,6 +1,6 @@
 /**
  * @file 온보딩 프로필 입력 페이지
- * @description 이메일 인증 완료 후 이름·전화번호·생년월일·성별·소속클럽을 입력받아
+ * @description 이메일 인증 완료 후 이름·전화번호·생년월일·성별을 입력받아
  *              프로필을 완성하는 온보딩 단계.
  * @module auth
  */
@@ -301,7 +301,7 @@ export default function JoinCompletePage() {
           </div>
 
           {/* 성별 */}
-          <div style={{ marginBottom: "18px" }}>
+          <div style={{ marginBottom: "28px" }}>
             <label style={labelStyle}>
               성별 <span style={{ color: "#e53e3e" }}>*</span>
             </label>
@@ -313,17 +313,6 @@ export default function JoinCompletePage() {
               <option value="F">여성</option>
               <option value="OTHER">기타</option>
             </select>
-          </div>
-
-          {/* 소속 클럽 (선택) */}
-          <div style={{ marginBottom: "28px" }}>
-            <label style={labelStyle}>소속 클럽 (선택)</label>
-            <input
-              type="text"
-              name="club"
-              placeholder="소속 클럽명 (없으면 비워두세요)"
-              style={inputStyle}
-            />
           </div>
 
           {/* 제출 버튼 */}
