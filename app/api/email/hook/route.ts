@@ -264,18 +264,61 @@ export async function POST(request: NextRequest) {
   let subject = ""
   let htmlBody = ""
 
-  const confirmUrl = `${email_data.site_url}/api/auth/confirm?token_hash=${email_data.token_hash}&type=${actionType}&next=/ko/my/dashboard`
+  const confirmUrl = `${email_data.site_url}/api/auth/confirm?token_hash=${email_data.token_hash}&type=${actionType}&next=/ko/join/complete`
 
   if (actionType === "signup") {
     subject = "[KTSA] 이메일 인증을 완료해주세요"
     htmlBody = `
-      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
-        <h2 style="color: #1e3a6e;">KTSA 한국트레일스포츠협회</h2>
-        <p>안녕하세요, KTSA에 가입해주셔서 감사합니다.</p>
-        <p>아래 버튼을 클릭하여 이메일 인증을 완료해주세요.</p>
-        <a href="${confirmUrl}" style="display:inline-block;background:#1e3a6e;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;margin:16px 0;">이메일 인증하기</a>
-        <p style="color:#888;font-size:12px;">이 링크는 24시간 후 만료됩니다.</p>
-      </div>
+<!DOCTYPE html>
+<html lang="ko">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f0f4f8;font-family:'Helvetica Neue',Arial,'Noto Sans KR',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f4f8;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+        <!-- 헤더 -->
+        <tr>
+          <td style="background-color:#1e3a6e;padding:36px 40px;text-align:center;">
+            <p style="margin:0 0 8px 0;color:#90b4e8;font-size:12px;letter-spacing:0.1em;font-weight:600;text-transform:uppercase;">KOREA TRAIL SPORTS ASSOCIATION</p>
+            <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.3px;">KTSA 한국트레일스포츠협회</h1>
+          </td>
+        </tr>
+        <!-- 본문 -->
+        <tr>
+          <td style="padding:40px 40px 32px;">
+            <h2 style="margin:0 0 16px 0;color:#1e3a6e;font-size:20px;font-weight:700;">이메일 인증을 완료해주세요</h2>
+            <p style="margin:0 0 12px 0;color:#4a5568;font-size:15px;line-height:1.7;">안녕하세요,<br>KTSA 회원 가입을 신청해 주셔서 감사합니다.</p>
+            <p style="margin:0 0 28px 0;color:#4a5568;font-size:15px;line-height:1.7;">아래 버튼을 클릭하여 이메일 인증을 완료하고 트레일 스포츠 커뮤니티에 함께해주세요.</p>
+            <!-- CTA 버튼 -->
+            <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+              <a href="${confirmUrl}"
+                style="display:inline-block;background-color:#1e3a6e;color:#ffffff;text-decoration:none;padding:16px 48px;border-radius:10px;font-size:16px;font-weight:700;letter-spacing:0.02em;">
+                이메일 인증하기
+              </a>
+            </td></tr></table>
+            <p style="margin:28px 0 0 0;color:#a0aec0;font-size:12px;line-height:1.6;text-align:center;">
+              버튼이 작동하지 않으면 아래 링크를 브라우저에 복사해주세요.<br>
+              <span style="color:#718096;word-break:break-all;">${confirmUrl}</span>
+            </p>
+            <p style="margin:16px 0 0 0;color:#a0aec0;font-size:12px;text-align:center;">이 링크는 <strong>24시간</strong> 후 만료됩니다.</p>
+          </td>
+        </tr>
+        <!-- 구분선 -->
+        <tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid #e2e8f0;margin:0;"></td></tr>
+        <!-- 푸터 -->
+        <tr>
+          <td style="padding:24px 40px;text-align:center;">
+            <p style="margin:0;color:#a0aec0;font-size:12px;line-height:1.6;">
+              본 메일은 발신 전용입니다. 문의: <a href="mailto:info@trailkorea.org" style="color:#1e3a6e;text-decoration:none;">info@trailkorea.org</a><br>
+              © 2025 KTSA 한국트레일스포츠협회
+            </p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>
     `
   } else if (actionType === "recovery") {
     subject = "[KTSA] 비밀번호 재설정 링크"
