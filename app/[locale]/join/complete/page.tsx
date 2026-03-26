@@ -135,17 +135,6 @@ export default function JoinCompletePage() {
             textAlign: "center",
           }}
         >
-          <p
-            style={{
-              color: "#90b4e8",
-              fontSize: "13px",
-              letterSpacing: "0.08em",
-              marginBottom: "8px",
-              fontWeight: 500,
-            }}
-          >
-            KTSA 한국트레일스포츠협회
-          </p>
           <h1
             style={{
               color: "#ffffff",
@@ -154,7 +143,7 @@ export default function JoinCompletePage() {
               margin: 0,
             }}
           >
-            KTSA에 오신 것을 환영합니다 🎉
+            한국트레일스포츠협회에 오신 것을 환영합니다
           </h1>
           <p
             style={{
