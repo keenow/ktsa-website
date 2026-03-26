@@ -11,33 +11,47 @@ import { useState } from "react"
 import { useActionState } from "react"
 import { saveOnboardingProfile } from "./actions"
 
+// ─── 국가 코드 목록 ──────────────────────────────────────────
+
+const COUNTRY_CODES = [
+  { label: "🇰🇷 대한민국", value: "+82" },
+  { label: "🇺🇸 미국/캐나다", value: "+1" },
+  { label: "🇨🇳 중국", value: "+86" },
+  { label: "🇯🇵 일본", value: "+81" },
+  { label: "🇬🇧 영국", value: "+44" },
+  { label: "🇦🇺 호주", value: "+61" },
+  { label: "🇩🇪 독일", value: "+49" },
+  { label: "🇫🇷 프랑스", value: "+33" },
+  { label: "기타 (직접입력)", value: "other" },
+]
+
 // ─── 전화번호 자동 포맷 ─────────────────────────────────────
 
 /**
- * 숫자 문자열을 한국 전화번호 형식으로 변환
- * - 010: 010-XXXX-XXXX
- * - 02: 02-XXXX-XXXX
- * - 그 외: 0XX-XXXX-XXXX
+ * 한국 전화번호 자동 포맷 (010-XXXX-XXXX)
  */
-function formatPhone(raw: string): string {
+function formatKoreanPhone(raw: string): string {
   const d = raw.replace(/\D/g, "").slice(0, 11)
-
   if (d.startsWith("010")) {
     if (d.length <= 3) return d
     if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`
     return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`
   }
-
   if (d.startsWith("02")) {
     if (d.length <= 2) return d
     if (d.length <= 6) return `${d.slice(0, 2)}-${d.slice(2)}`
     return `${d.slice(0, 2)}-${d.slice(2, 6)}-${d.slice(6)}`
   }
-
-  // 0XX 지역번호
   if (d.length <= 3) return d
   if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`
   return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`
+}
+
+/**
+ * 숫자·공백·하이픈만 허용 (해외 번호용)
+ */
+function filterForeignPhone(raw: string): string {
+  return raw.replace(/[^\d\s\-]/g, "")
 }
 
 /**
@@ -51,7 +65,31 @@ export default function JoinCompletePage() {
   )
 
   // ─── 전화번호 상태 ───────────────────────────────────────
-  const [phone, setPhone] = useState("")
+  const [countryCode, setCountryCode] = useState("+82")
+  const [customCode, setCustomCode] = useState("")
+  const [localPhone, setLocalPhone] = useState("")
+
+  const isKorea = countryCode === "+82"
+  const isOther = countryCode === "other"
+  const finalCode = isOther ? customCode : countryCode
+
+  // DB 저장값: "+82 10-8778-3593" 형식 (+82 선택 시 앞의 0 제거)
+  const phoneValue = finalCode
+    ? `${finalCode} ${isKorea ? localPhone.replace(/^0/, "") : localPhone}`
+    : ""
+
+  function handleLocalPhoneChange(raw: string) {
+    if (isKorea) {
+      setLocalPhone(formatKoreanPhone(raw))
+    } else {
+      setLocalPhone(filterForeignPhone(raw))
+    }
+  }
+
+  function handleCountryCodeChange(val: string) {
+    setCountryCode(val)
+    setLocalPhone("")
+  }
 
   // ─── 생년월일 상태 ───────────────────────────────────────
   const [birthYear, setBirthYear] = useState("")
@@ -163,20 +201,50 @@ export default function JoinCompletePage() {
             />
           </div>
 
-          {/* 전화번호 — 숫자 입력 시 하이픈 자동 삽입 */}
+          {/* 전화번호 — 국가 코드 선택 + 로컬 번호 입력 */}
           <div style={{ marginBottom: "18px" }}>
             <label style={labelStyle}>
               전화번호 <span style={{ color: "#e53e3e" }}>*</span>
             </label>
-            <input
-              type="tel"
-              name="phone"
-              required
-              placeholder="010-0000-0000"
-              value={phone}
-              onChange={(e) => setPhone(formatPhone(e.target.value))}
-              style={inputStyle}
-            />
+            <div style={{ display: "flex", gap: "8px" }}>
+              {/* 국가 코드 select */}
+              <select
+                value={countryCode}
+                onChange={(e) => handleCountryCodeChange(e.target.value)}
+                style={{ ...inputStyle, flex: "0 0 auto", width: "160px" }}
+              >
+                {COUNTRY_CODES.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+
+              {/* 기타: 코드 직접 입력 */}
+              {isOther && (
+                <input
+                  type="text"
+                  placeholder="+00"
+                  value={customCode}
+                  onChange={(e) =>
+                    setCustomCode(e.target.value.replace(/[^\d+]/g, ""))
+                  }
+                  style={{ ...inputStyle, flex: "0 0 auto", width: "72px" }}
+                />
+              )}
+
+              {/* 로컬 번호 입력 */}
+              <input
+                type="tel"
+                placeholder={isKorea ? "010-0000-0000" : "전화번호"}
+                value={localPhone}
+                onChange={(e) => handleLocalPhoneChange(e.target.value)}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+            </div>
+
+            {/* 최종 조합값을 서버로 전달 */}
+            <input type="hidden" name="phone" value={phoneValue} />
           </div>
 
           {/* 생년월일 — 년/월/일 select */}

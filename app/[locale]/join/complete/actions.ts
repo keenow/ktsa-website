@@ -44,9 +44,9 @@ export async function saveOnboardingProfile(
   if (!birth_date) return "생년월일을 모두 선택해주세요."
   if (!gender) return "성별을 선택해주세요."
 
-  const phoneRegex = /^01[0-9]-\d{3,4}-\d{4}$/
-  if (!phoneRegex.test(phone)) {
-    return "전화번호 형식이 올바르지 않습니다. (예: 010-0000-0000)"
+  // 국제 전화번호 형식 최소 검증: +국가코드 로컬번호
+  if (!phone.startsWith("+") || phone.replace(/\D/g, "").length < 7) {
+    return "전화번호 형식이 올바르지 않습니다."
   }
 
   // 날짜 유효성 검증 — 2월 31일 등 존재하지 않는 날짜 방지
