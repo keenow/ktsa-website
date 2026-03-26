@@ -7,8 +7,38 @@
 
 "use client"
 
+import { useState } from "react"
 import { useActionState } from "react"
 import { saveOnboardingProfile } from "./actions"
+
+// ─── 전화번호 자동 포맷 ─────────────────────────────────────
+
+/**
+ * 숫자 문자열을 한국 전화번호 형식으로 변환
+ * - 010: 010-XXXX-XXXX
+ * - 02: 02-XXXX-XXXX
+ * - 그 외: 0XX-XXXX-XXXX
+ */
+function formatPhone(raw: string): string {
+  const d = raw.replace(/\D/g, "").slice(0, 11)
+
+  if (d.startsWith("010")) {
+    if (d.length <= 3) return d
+    if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`
+    return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`
+  }
+
+  if (d.startsWith("02")) {
+    if (d.length <= 2) return d
+    if (d.length <= 6) return `${d.slice(0, 2)}-${d.slice(2)}`
+    return `${d.slice(0, 2)}-${d.slice(2, 6)}-${d.slice(6)}`
+  }
+
+  // 0XX 지역번호
+  if (d.length <= 3) return d
+  if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`
+  return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7)}`
+}
 
 /**
  * 온보딩 완료 페이지 컴포넌트
@@ -19,6 +49,23 @@ export default function JoinCompletePage() {
     saveOnboardingProfile,
     null
   )
+
+  // ─── 전화번호 상태 ───────────────────────────────────────
+  const [phone, setPhone] = useState("")
+
+  // ─── 생년월일 상태 ───────────────────────────────────────
+  const [birthYear, setBirthYear] = useState("")
+  const [birthMonth, setBirthMonth] = useState("")
+  const [birthDay, setBirthDay] = useState("")
+
+  // 세 값이 모두 선택됐을 때 YYYY-MM-DD 조합
+  const birthDate =
+    birthYear && birthMonth && birthDay
+      ? `${birthYear}-${birthMonth.padStart(2, "0")}-${birthDay.padStart(2, "0")}`
+      : ""
+
+  // ─── 연도 목록 (2010 → 1930) ─────────────────────────────
+  const years = Array.from({ length: 2010 - 1930 + 1 }, (_, i) => 2010 - i)
 
   return (
     <main
@@ -116,7 +163,7 @@ export default function JoinCompletePage() {
             />
           </div>
 
-          {/* 전화번호 */}
+          {/* 전화번호 — 숫자 입력 시 하이픈 자동 삽입 */}
           <div style={{ marginBottom: "18px" }}>
             <label style={labelStyle}>
               전화번호 <span style={{ color: "#e53e3e" }}>*</span>
@@ -126,22 +173,63 @@ export default function JoinCompletePage() {
               name="phone"
               required
               placeholder="010-0000-0000"
-              pattern="01[0-9]-\d{3,4}-\d{4}"
+              value={phone}
+              onChange={(e) => setPhone(formatPhone(e.target.value))}
               style={inputStyle}
             />
           </div>
 
-          {/* 생년월일 */}
+          {/* 생년월일 — 년/월/일 select */}
           <div style={{ marginBottom: "18px" }}>
             <label style={labelStyle}>
               생년월일 <span style={{ color: "#e53e3e" }}>*</span>
             </label>
-            <input
-              type="date"
-              name="birth_date"
-              required
-              style={inputStyle}
-            />
+            <div style={{ display: "flex", gap: "8px" }}>
+              {/* 년 */}
+              <select
+                value={birthYear}
+                onChange={(e) => setBirthYear(e.target.value)}
+                style={{ ...inputStyle, flex: "0 0 auto", width: "110px" }}
+              >
+                <option value="">년</option>
+                {years.map((y) => (
+                  <option key={y} value={String(y)}>
+                    {y}년
+                  </option>
+                ))}
+              </select>
+
+              {/* 월 */}
+              <select
+                value={birthMonth}
+                onChange={(e) => setBirthMonth(e.target.value)}
+                style={{ ...inputStyle, flex: "0 0 auto", width: "80px" }}
+              >
+                <option value="">월</option>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                  <option key={m} value={String(m)}>
+                    {m}월
+                  </option>
+                ))}
+              </select>
+
+              {/* 일 */}
+              <select
+                value={birthDay}
+                onChange={(e) => setBirthDay(e.target.value)}
+                style={{ ...inputStyle, flex: "0 0 auto", width: "80px" }}
+              >
+                <option value="">일</option>
+                {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                  <option key={d} value={String(d)}>
+                    {d}일
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* 세 값을 합쳐 YYYY-MM-DD로 서버에 전달 */}
+            <input type="hidden" name="birth_date" value={birthDate} />
           </div>
 
           {/* 성별 */}

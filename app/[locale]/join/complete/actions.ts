@@ -41,12 +41,21 @@ export async function saveOnboardingProfile(
 
   if (!name) return "이름을 입력해주세요."
   if (!phone) return "전화번호를 입력해주세요."
-  if (!birth_date) return "생년월일을 입력해주세요."
+  if (!birth_date) return "생년월일을 모두 선택해주세요."
   if (!gender) return "성별을 선택해주세요."
 
   const phoneRegex = /^01[0-9]-\d{3,4}-\d{4}$/
   if (!phoneRegex.test(phone)) {
     return "전화번호 형식이 올바르지 않습니다. (예: 010-0000-0000)"
+  }
+
+  // 날짜 유효성 검증 — 2월 31일 등 존재하지 않는 날짜 방지
+  const parsedDate = new Date(birth_date)
+  if (
+    isNaN(parsedDate.getTime()) ||
+    parsedDate.toISOString().slice(0, 10) !== birth_date
+  ) {
+    return "유효하지 않은 날짜입니다. 생년월일을 다시 확인해주세요."
   }
 
   // ─── profiles UPDATE (RLS 우회: supabaseAdmin 필수) ──────
