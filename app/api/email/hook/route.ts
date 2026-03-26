@@ -10,11 +10,15 @@
  *              원문 바디 앞 2048자 로그가 필요하면 `LOG_AUTH_HOOK_BODY=true`.
  *              단계별 추적 로그(Warning): `DEBUG_AUTH_HOOK=true` → `trace`·`step`으로 수신·서명·파싱·Postmark 응답까지 기록.
  *              Postmark API 응답 JSON 전체는 `postmark_sent`·`postmark_failed`의 `postmarkApiResponse`에 포함(본문은 한 번만 읽음).
+ *              `POSTMARK_ACCOUNT_TOKEN`이 있으면 Sender Signature 확인을 선행한다.
  * @module auth
  */
 
 import { createHmac, timingSafeEqual } from "crypto"
 import { NextRequest, NextResponse } from "next/server"
+
+const POSTMARK_FROM_EMAIL =
+  process.env.POSTMARK_FROM_EMAIL?.trim() || "noreply@trailservice.net"
 
 /**
  * Svix HMAC-SHA256 방식으로 Supabase Auth Hook 서명 검증
@@ -86,6 +90,72 @@ function traceAuthHook(
 }
 
 /**
+ * Postmark Sender Signatures API로 발신자 확인 상태를 조회
+ * @param accountToken - Postmark account token (X-Postmark-Account-Token)
+ * @param senderEmail - 확인할 발신 주소
+ * @returns 확인 결과
+ */
+async function checkPostmarkSenderSignature(
+  accountToken: string,
+  senderEmail: string
+): Promise<
+  | { ok: true; confirmed: boolean }
+  | { ok: false; status?: number; reason: string; response?: unknown }
+> {
+  try {
+    const res = await fetch("https://api.postmarkapp.com/senders", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        "X-Postmark-Account-Token": accountToken,
+      },
+    })
+    const text = await res.text()
+    let body: unknown = null
+    try {
+      body = text ? (JSON.parse(text) as unknown) : null
+    } catch {
+      body = { parseError: true, rawPreview: text.substring(0, 500) }
+    }
+
+    if (!res.ok) {
+      return {
+        ok: false,
+        status: res.status,
+        reason: "sender_api_http_error",
+        response: body,
+      }
+    }
+    if (!Array.isArray(body)) {
+      return {
+        ok: false,
+        status: res.status,
+        reason: "sender_api_unexpected_body",
+        response: body,
+      }
+    }
+
+    const sender = body.find((row) => {
+      if (!row || typeof row !== "object") return false
+      if (!("EmailAddress" in row)) return false
+      const email = (row as { EmailAddress?: string }).EmailAddress
+      return typeof email === "string" && email.toLowerCase() === senderEmail.toLowerCase()
+    }) as { Confirmed?: boolean } | undefined
+
+    if (!sender) {
+      return { ok: false, reason: "sender_not_found" }
+    }
+    return { ok: true, confirmed: Boolean(sender.Confirmed) }
+  } catch (error: unknown) {
+    return {
+      ok: false,
+      reason: "sender_api_fetch_error",
+      response: error instanceof Error ? error.message : String(error),
+    }
+  }
+}
+
+/**
  * POST /api/email/hook
  * Supabase Auth Hook 수신 → Postmark로 인증 이메일 발송
  * Auth: Svix HMAC-SHA256 서명 검증 (SUPABASE_HOOK_SECRET)
@@ -108,6 +178,7 @@ export async function POST(request: NextRequest) {
   }
 
   const postmarkToken = process.env.POSTMARK_SERVER_TOKEN?.trim()
+  const postmarkAccountToken = process.env.POSTMARK_ACCOUNT_TOKEN?.trim()
   if (!postmarkToken) {
     traceAuthHook(undefined, 'blocked_no_postmark_token')
     console.error('[api/email/hook] POSTMARK_SERVER_TOKEN 없음')
@@ -230,6 +301,55 @@ export async function POST(request: NextRequest) {
     htmlBody = `<p><a href="${confirmUrl}">여기를 클릭하여 인증을 완료해주세요.</a></p>`
   }
 
+  // ─── Sender Signature 확인 (선택: account token 있을 때) ───
+  if (postmarkAccountToken) {
+    traceAuthHook(svixMessageId, "sender_check_start", {
+      fromMasked: maskEmailForLog(POSTMARK_FROM_EMAIL),
+    })
+    const senderCheck = await checkPostmarkSenderSignature(
+      postmarkAccountToken,
+      POSTMARK_FROM_EMAIL
+    )
+    if (!senderCheck.ok) {
+      traceAuthHook(svixMessageId, "sender_check_skipped_on_error", {
+        reason: senderCheck.reason,
+        status: senderCheck.status,
+      })
+      console.warn(
+        "[api/email/hook]",
+        JSON.stringify({
+          event: "sender_check_error_continuing",
+          svixMessageId,
+          reason: senderCheck.reason,
+          status: senderCheck.status,
+          response: senderCheck.response,
+        })
+      )
+    } else if (!senderCheck.confirmed) {
+      traceAuthHook(svixMessageId, "sender_unconfirmed_blocked", {
+        fromMasked: maskEmailForLog(POSTMARK_FROM_EMAIL),
+      })
+      console.error(
+        "[api/email/hook]",
+        JSON.stringify({
+          event: "sender_unconfirmed",
+          svixMessageId,
+          from: POSTMARK_FROM_EMAIL,
+        })
+      )
+      return NextResponse.json(
+        { error: "Sender signature not confirmed" },
+        { status: 500 }
+      )
+    } else {
+      traceAuthHook(svixMessageId, "sender_confirmed", {
+        fromMasked: maskEmailForLog(POSTMARK_FROM_EMAIL),
+      })
+    }
+  } else {
+    traceAuthHook(svixMessageId, "sender_check_skipped_no_account_token")
+  }
+
   // ─── Postmark HTTP API 발송 ──────────────────────────
   traceAuthHook(svixMessageId, 'postmark_request_start', {
     actionType: actionType ?? 'unknown',
@@ -243,7 +363,7 @@ export async function POST(request: NextRequest) {
       "X-Postmark-Server-Token": postmarkToken,
     },
     body: JSON.stringify({
-      From: "noreply@trailservice.net",
+      From: POSTMARK_FROM_EMAIL,
       To: user.email,
       Subject: subject,
       HtmlBody: htmlBody,
