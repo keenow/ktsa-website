@@ -7,7 +7,6 @@
  */
 
 import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
 import { NextRequest, NextResponse } from "next/server"
 
 /**
@@ -30,16 +29,20 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get("next") ?? "/ko/my/dashboard"
 
   if (token_hash && type) {
-    const cookieStore = await cookies()
+    // NOTE: redirect response를 먼저 생성하고 쿠키를 직접 설정해야
+    //       verifyOtp가 만든 세션 쿠키가 브라우저에 전달된다.
+    const response = NextResponse.redirect(new URL(next, request.url))
+
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll: () => cookieStore.getAll(),
+          getAll: () => request.cookies.getAll(),
           setAll: (cookiesToSet) => {
+            // response에 직접 쿠키 설정 — cookieStore 경유 시 redirect response에 포함되지 않음
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              response.cookies.set(name, value, options)
             )
           },
         },
@@ -48,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     const { error } = await supabase.auth.verifyOtp({ type, token_hash })
     if (!error) {
-      return NextResponse.redirect(new URL(next, request.url))
+      return response
     }
 
     console.warn(
