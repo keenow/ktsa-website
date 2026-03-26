@@ -9,6 +9,7 @@
  *              Supabase/Svix와 대조할 때 `svixMessageId`(= webhook-id 헤더)를 사용한다.
  *              원문 바디 앞 2048자 로그가 필요하면 `LOG_AUTH_HOOK_BODY=true`.
  *              단계별 추적 로그(Warning): `DEBUG_AUTH_HOOK=true` → `trace`·`step`으로 수신·서명·파싱·Postmark 응답까지 기록.
+ *              Postmark API 응답 JSON 전체는 `postmark_sent`·`postmark_failed`의 `postmarkApiResponse`에 포함(본문은 한 번만 읽음).
  * @module auth
  */
 
@@ -250,30 +251,36 @@ export async function POST(request: NextRequest) {
     }),
   })
 
-  let postmarkErrorBody: unknown
-  if (!postmarkRes.ok) {
-    try {
-      postmarkErrorBody = await postmarkRes.json()
-    } catch {
-      postmarkErrorBody = { parseError: true }
+  const postmarkResponseText = await postmarkRes.text()
+  let postmarkApiResponse: unknown
+  try {
+    postmarkApiResponse = postmarkResponseText
+      ? (JSON.parse(postmarkResponseText) as unknown)
+      : null
+  } catch {
+    postmarkApiResponse = {
+      parseError: true,
+      rawPreview: postmarkResponseText.substring(0, 500),
     }
+  }
+
+  if (!postmarkRes.ok) {
     traceAuthHook(svixMessageId, 'postmark_response', {
       httpStatus: postmarkRes.status,
       ok: false,
       errorCode:
-        postmarkErrorBody &&
-        typeof postmarkErrorBody === 'object' &&
-        'ErrorCode' in postmarkErrorBody
-          ? (postmarkErrorBody as { ErrorCode?: number }).ErrorCode
+        postmarkApiResponse &&
+        typeof postmarkApiResponse === 'object' &&
+        'ErrorCode' in postmarkApiResponse
+          ? (postmarkApiResponse as { ErrorCode?: number }).ErrorCode
           : undefined,
     })
-    const err = postmarkErrorBody
     console.error('[api/email/hook]', JSON.stringify({
       event: 'postmark_failed',
       svixMessageId,
       actionType,
       toMasked: maskEmailForLog(user.email),
-      postmark: err,
+      postmarkApiResponse,
     }))
     return NextResponse.json({ error: "Email send failed" }, { status: 500 })
   }
@@ -289,6 +296,7 @@ export async function POST(request: NextRequest) {
       svixMessageId,
       actionType,
       toMasked: maskEmailForLog(user.email),
+      postmarkApiResponse,
     })
   )
 
