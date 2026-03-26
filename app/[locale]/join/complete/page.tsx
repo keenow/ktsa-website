@@ -9,6 +9,7 @@
 
 import { useState } from "react"
 import { useActionState } from "react"
+import { useTranslations, useLocale } from "next-intl"
 import { saveOnboardingProfile } from "./actions"
 
 // ─── 국가 코드 목록 ──────────────────────────────────────────
@@ -22,7 +23,6 @@ const COUNTRY_CODES = [
   { label: "🇦🇺 호주", value: "+61" },
   { label: "🇩🇪 독일", value: "+49" },
   { label: "🇫🇷 프랑스", value: "+33" },
-  { label: "기타 (직접입력)", value: "other" },
 ]
 
 // ─── 전화번호 자동 포맷 ─────────────────────────────────────
@@ -59,6 +59,10 @@ function filterForeignPhone(raw: string): string {
  * 이메일 인증 후 최초 1회 프로필 정보 입력
  */
 export default function JoinCompletePage() {
+  const t = useTranslations("join_complete")
+  const locale = useLocale()
+  const isKo = locale === "ko"
+
   const [error, formAction, isPending] = useActionState(
     saveOnboardingProfile,
     null
@@ -143,7 +147,7 @@ export default function JoinCompletePage() {
               margin: 0,
             }}
           >
-            한국트레일스포츠협회에 오신 것을 환영합니다
+            {t("title")}
           </h1>
           <p
             style={{
@@ -153,12 +157,15 @@ export default function JoinCompletePage() {
               marginBottom: 0,
             }}
           >
-            아래 정보를 입력하면 가입이 완료됩니다.
+            {t("subtitle")}
           </p>
         </div>
 
         {/* ─── 폼 ───────────────────────────────────── */}
         <form action={formAction} style={{ padding: "32px" }}>
+          {/* locale hidden input — actions.ts에서 번역에 사용 */}
+          <input type="hidden" name="locale" value={locale} />
+
           {/* 에러 메시지 */}
           {error && (
             <div
@@ -179,13 +186,13 @@ export default function JoinCompletePage() {
           {/* 이름 */}
           <div style={{ marginBottom: "18px" }}>
             <label style={labelStyle}>
-              이름 <span style={{ color: "#e53e3e" }}>*</span>
+              {t("name")} <span style={{ color: "#e53e3e" }}>*</span>
             </label>
             <input
               type="text"
               name="name"
               required
-              placeholder="홍길동"
+              placeholder={t("name_placeholder")}
               style={inputStyle}
             />
           </div>
@@ -193,7 +200,7 @@ export default function JoinCompletePage() {
           {/* 전화번호 — 국가 코드 선택 + 로컬 번호 입력 */}
           <div style={{ marginBottom: "18px" }}>
             <label style={labelStyle}>
-              전화번호 <span style={{ color: "#e53e3e" }}>*</span>
+              {t("phone")} <span style={{ color: "#e53e3e" }}>*</span>
             </label>
             <div style={{ display: "flex", gap: "8px" }}>
               {/* 국가 코드 select */}
@@ -207,6 +214,7 @@ export default function JoinCompletePage() {
                     {c.label}
                   </option>
                 ))}
+                <option value="other">{t("country_other")}</option>
               </select>
 
               {/* 기타: 코드 직접 입력 */}
@@ -225,7 +233,7 @@ export default function JoinCompletePage() {
               {/* 로컬 번호 입력 */}
               <input
                 type="tel"
-                placeholder={isKorea ? "010-0000-0000" : "전화번호"}
+                placeholder={isKorea ? t("phone_placeholder_kr") : t("phone_placeholder_intl")}
                 value={localPhone}
                 onChange={(e) => handleLocalPhoneChange(e.target.value)}
                 style={{ ...inputStyle, flex: 1 }}
@@ -239,7 +247,7 @@ export default function JoinCompletePage() {
           {/* 생년월일 — 년/월/일 select */}
           <div style={{ marginBottom: "18px" }}>
             <label style={labelStyle}>
-              생년월일 <span style={{ color: "#e53e3e" }}>*</span>
+              {t("birth_date")} <span style={{ color: "#e53e3e" }}>*</span>
             </label>
             <div style={{ display: "flex", gap: "8px" }}>
               {/* 년 */}
@@ -248,10 +256,10 @@ export default function JoinCompletePage() {
                 onChange={(e) => setBirthYear(e.target.value)}
                 style={{ ...inputStyle, flex: "0 0 auto", width: "110px" }}
               >
-                <option value="">년</option>
+                <option value="">{t("birth_year")}</option>
                 {years.map((y) => (
                   <option key={y} value={String(y)}>
-                    {y}년
+                    {isKo ? `${y}년` : String(y)}
                   </option>
                 ))}
               </select>
@@ -262,10 +270,10 @@ export default function JoinCompletePage() {
                 onChange={(e) => setBirthMonth(e.target.value)}
                 style={{ ...inputStyle, flex: "0 0 auto", width: "80px" }}
               >
-                <option value="">월</option>
+                <option value="">{t("birth_month")}</option>
                 {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
                   <option key={m} value={String(m)}>
-                    {m}월
+                    {isKo ? `${m}월` : String(m)}
                   </option>
                 ))}
               </select>
@@ -276,10 +284,10 @@ export default function JoinCompletePage() {
                 onChange={(e) => setBirthDay(e.target.value)}
                 style={{ ...inputStyle, flex: "0 0 auto", width: "80px" }}
               >
-                <option value="">일</option>
+                <option value="">{t("birth_day")}</option>
                 {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
                   <option key={d} value={String(d)}>
-                    {d}일
+                    {isKo ? `${d}일` : String(d)}
                   </option>
                 ))}
               </select>
@@ -292,15 +300,15 @@ export default function JoinCompletePage() {
           {/* 성별 */}
           <div style={{ marginBottom: "28px" }}>
             <label style={labelStyle}>
-              성별 <span style={{ color: "#e53e3e" }}>*</span>
+              {t("gender")} <span style={{ color: "#e53e3e" }}>*</span>
             </label>
             <select name="gender" required style={inputStyle} defaultValue="">
               <option value="" disabled>
-                선택해주세요
+                {t("gender_select")}
               </option>
-              <option value="M">남성</option>
-              <option value="F">여성</option>
-              <option value="OTHER">기타</option>
+              <option value="M">{t("gender_male")}</option>
+              <option value="F">{t("gender_female")}</option>
+              <option value="OTHER">{t("gender_other")}</option>
             </select>
           </div>
 
@@ -321,7 +329,7 @@ export default function JoinCompletePage() {
               transition: "background-color 0.2s",
             }}
           >
-            {isPending ? "저장 중..." : "가입 완료하기"}
+            {isPending ? t("submitting") : t("submit")}
           </button>
         </form>
       </div>

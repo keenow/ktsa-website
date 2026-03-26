@@ -7,7 +7,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -21,12 +21,6 @@ interface Profile {
   membership_grade: MembershipGrade | null;
 }
 
-const GRADE_LABEL: Record<MembershipGrade, { ko: string; en: string }> = {
-  general: { ko: "준회원", en: "Associate Member" },
-  member:  { ko: "정회원", en: "Regular Member" },
-  admin:   { ko: "관리자", en: "Admin" },
-};
-
 /**
  * 마이페이지 대시보드 컴포넌트
  * @description 로그인 여부 확인 후 회원 프로필과 등급별 UI를 렌더링
@@ -35,7 +29,7 @@ const GRADE_LABEL: Record<MembershipGrade, { ko: string; en: string }> = {
 export default function MyDashboard() {
   const locale = useLocale();
   const router = useRouter();
-  const isKo = locale === "ko";
+  const t = useTranslations("dashboard");
 
   // ─── 상태 관리 ─────────────────────────────────────
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -100,15 +94,23 @@ export default function MyDashboard() {
   }
 
   const grade = profile?.membership_grade ?? "general";
-  const gradeLabel = isKo ? GRADE_LABEL[grade].ko : GRADE_LABEL[grade].en;
+  const gradeLabel = t(`grade_${grade}` as "grade_general" | "grade_member" | "grade_admin");
   const isAssociate = grade === "general";
+
+  const benefits = [
+    t("upgrade_benefit_1"),
+    t("upgrade_benefit_2"),
+    t("upgrade_benefit_3"),
+    t("upgrade_benefit_4"),
+    t("upgrade_benefit_5"),
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
       <div className="bg-[#1e3a6e] text-white px-4 py-8">
         <div className="max-w-xl mx-auto">
-          <p className="text-blue-200 text-sm mb-1">{isKo ? "안녕하세요" : "Welcome"}</p>
+          <p className="text-blue-200 text-sm mb-1">{t("greeting")}</p>
           <h1 className="text-xl font-bold">{profile?.name ?? profile?.email ?? ""}</h1>
           <span className="mt-2 inline-block text-xs bg-white/20 px-2.5 py-1 rounded-full">
             {gradeLabel}
@@ -124,28 +126,16 @@ export default function MyDashboard() {
             <div className="flex items-start justify-between mb-3">
               <div>
                 <h2 className="font-bold text-gray-900">
-                  {isKo ? "정회원으로 업그레이드" : "Upgrade to Regular Member"}
+                  {t("upgrade_title")}
                 </h2>
                 <p className="text-sm text-gray-500 mt-0.5">
-                  {isKo ? "연 150,000원" : "₩150,000 / year"}
+                  {locale === "ko" ? "연 150,000원" : "₩150,000 / year"}
                 </p>
               </div>
               <span className="text-2xl">🏅</span>
             </div>
             <ul className="text-sm text-gray-600 space-y-1.5 mb-4">
-              {(isKo ? [
-                "대회 참가비 10% 할인",
-                "ITRA 가입 자격 부여",
-                "보험 가입 대행 서비스",
-                "스탭·심판 교육 참여 자격",
-                "3사 공동 사전예매",
-              ] : [
-                "10% race entry discount",
-                "ITRA membership eligibility",
-                "Insurance enrollment service",
-                "Staff & referee training access",
-                "Priority registration",
-              ]).map((b) => (
+              {benefits.map((b) => (
                 <li key={b} className="flex items-center gap-2">
                   <span className="text-[#1e3a6e] text-xs">✓</span>
                   {b}
@@ -153,15 +143,13 @@ export default function MyDashboard() {
               ))}
             </ul>
             <p className="text-xs text-amber-600 mb-4">
-              {isKo
-                ? "⚠ 협회 인정 대회 참여 경험이 있는 분만 신청 가능합니다."
-                : "⚠ Requires prior experience at a recognized race."}
+              {t("upgrade_notice")}
             </p>
             <Link
               href={`/${locale}/my/upgrade`}
               className="block w-full text-center bg-[#1e3a6e] text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-[#152d57] transition-colors"
             >
-              {isKo ? "업그레이드 신청" : "Apply for Upgrade"}
+              {t("upgrade_apply")}
             </Link>
           </div>
         )}
@@ -169,19 +157,19 @@ export default function MyDashboard() {
         {/* 내 정보 카드 */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h2 className="font-bold text-gray-900 mb-3">
-            {isKo ? "내 정보" : "My Profile"}
+            {t("my_profile")}
           </h2>
           <div className="space-y-2 text-sm text-gray-600">
             <div className="flex justify-between">
-              <span className="text-gray-400">{isKo ? "이름" : "Name"}</span>
+              <span className="text-gray-400">{t("label_name")}</span>
               <span>{profile?.name ?? "-"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">{isKo ? "이메일" : "Email"}</span>
+              <span className="text-gray-400">{t("label_email")}</span>
               <span>{profile?.email ?? "-"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400">{isKo ? "회원 등급" : "Grade"}</span>
+              <span className="text-gray-400">{t("label_grade")}</span>
               <span className="font-medium text-gray-700">{gradeLabel}</span>
             </div>
           </div>
@@ -189,7 +177,7 @@ export default function MyDashboard() {
             href={`/${locale}/my/profile`}
             className="mt-4 block text-sm text-[#1e3a6e] hover:underline"
           >
-            {isKo ? "정보 수정 →" : "Edit profile →"}
+            {t("edit_profile")}
           </Link>
         </div>
 
@@ -198,7 +186,7 @@ export default function MyDashboard() {
           onClick={handleLogout}
           className="w-full text-sm text-gray-400 hover:text-gray-600 py-2"
         >
-          {isKo ? "로그아웃" : "Sign out"}
+          {t("sign_out")}
         </button>
 
       </div>
