@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const intlMiddleware = createMiddleware(routing)
 
-export default async function middleware(request: NextRequest) {
+export default async function proxy(request: NextRequest) {
   // /admin/* 경로 보호
   if (request.nextUrl.pathname.startsWith('/admin')) {
     const supabaseAnon = createServerClient(
