@@ -264,7 +264,8 @@ export async function POST(request: NextRequest) {
   let subject = ""
   let htmlBody = ""
 
-  const confirmUrl = `${email_data.site_url}/api/auth/confirm?token_hash=${email_data.token_hash}&type=${actionType}&next=/ko/join/complete`
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://trailkorea.org"
+  const confirmUrl = `${siteUrl}/api/auth/confirm?token_hash=${email_data.token_hash}&type=${actionType}&next=/ko/join/complete`
 
   if (actionType === "signup") {
     subject = "[KTSA] 이메일 인증을 완료해주세요"
