@@ -1,5 +1,6 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
+import Image from "next/image";
 
 /**
  * @file 뉴스·공지 페이지
@@ -79,6 +80,20 @@ export default async function NewsPage() {
                 <h3 className="font-bold text-gray-900 mb-2 leading-snug">
                   {isKo ? notice.title_ko : notice.title_en}
                 </h3>
+
+                {/* ─── 이미지 ─── */}
+                {notice.image_url && (
+                  <div className="mb-3 rounded-lg overflow-hidden">
+                    <Image
+                      src={notice.image_url}
+                      alt={isKo ? notice.title_ko : notice.title_en}
+                      width={800}
+                      height={400}
+                      className="w-full object-cover max-h-72"
+                      unoptimized
+                    />
+                  </div>
+                )}
 
                 {/* ─── 본문 ─── */}
                 <p className="text-sm text-gray-600 leading-relaxed mb-3 whitespace-pre-line">
