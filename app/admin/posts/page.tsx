@@ -7,7 +7,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { createBrowserClient } from "@supabase/ssr";
 
 type Notice = {
   id: string;
@@ -30,38 +29,38 @@ export default function AdminPostsPage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-
   async function load() {
     setLoading(true);
-    const { data } = await supabase
-      .from("notices")
-      .select("id, category, title_ko, badge_ko, is_published, pinned, created_at")
-      .order("pinned", { ascending: false })
-      .order("created_at", { ascending: false });
-    setNotices(data ?? []);
+    const res = await fetch("/api/admin/notices");
+    const data = await res.json();
+    setNotices(Array.isArray(data) ? data : []);
     setLoading(false);
   }
 
   useEffect(() => { load(); }, []);
 
   async function togglePublish(id: string, current: boolean) {
-    await supabase.from("notices").update({ is_published: !current }).eq("id", id);
+    await fetch(`/api/admin/notices/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ is_published: !current }),
+    });
     load();
   }
 
   async function togglePin(id: string, current: boolean) {
-    await supabase.from("notices").update({ pinned: !current }).eq("id", id);
+    await fetch(`/api/admin/notices/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pinned: !current }),
+    });
     load();
   }
 
   async function deleteNotice(id: string) {
     if (!confirm("삭제하시겠습니까?")) return;
     setDeleting(id);
-    await supabase.from("notices").delete().eq("id", id);
+    await fetch(`/api/admin/notices/${id}`, { method: "DELETE" });
     setDeleting(null);
     load();
   }
@@ -94,7 +93,7 @@ export default function AdminPostsPage() {
               <tr>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 w-16">분류</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">제목</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 w-24">날짜</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 w-28">날짜</th>
                 <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 w-16">고정</th>
                 <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 w-16">공개</th>
                 <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 w-24">관리</th>
@@ -120,7 +119,7 @@ export default function AdminPostsPage() {
                   <td className="px-4 py-3 text-center">
                     <button
                       onClick={() => togglePin(n.id, n.pinned)}
-                      className={`text-lg ${n.pinned ? "text-yellow-500" : "text-gray-200 hover:text-yellow-300"}`}
+                      className={`text-lg ${n.pinned ? "opacity-100" : "opacity-20 hover:opacity-60"}`}
                       title={n.pinned ? "고정 해제" : "고정"}
                     >
                       📌
@@ -147,7 +146,7 @@ export default function AdminPostsPage() {
                         disabled={deleting === n.id}
                         className="text-xs text-red-500 hover:underline disabled:opacity-40"
                       >
-                        삭제
+                        {deleting === n.id ? "..." : "삭제"}
                       </button>
                     </div>
                   </td>

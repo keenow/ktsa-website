@@ -29,8 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 
   return (
-    <html lang="ko">
-      <body className="flex h-screen bg-gray-50 font-sans text-gray-900 overflow-hidden">
+    <div className="flex h-screen bg-gray-50 font-sans text-gray-900 overflow-hidden">
 
         {/* ── 사이드바 ── */}
         <aside className={`flex flex-col bg-[#152d57] text-white transition-all duration-200 shrink-0 ${collapsed ? "w-14" : "w-56"}`}>
@@ -101,7 +100,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {children}
           </main>
         </div>
-      </body>
-    </html>
+      </div>
   );
 }

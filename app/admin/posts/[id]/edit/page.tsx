@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import NoticeForm, { type NoticeFormData } from "../../_components/NoticeForm";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 type NoticeRow = {
   id: string;
@@ -35,12 +36,9 @@ export default function EditNoticePage() {
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
-    supabase
-      .from("notices")
-      .select("*")
-      .eq("id", id)
-      .single()
-      .then(({ data }) => setNotice(data));
+    fetch(`/api/admin/notices/${id}`)
+      .then(r => r.json())
+      .then(data => setNotice(data));
   }, [id]);
 
   async function handleSubmit(data: NoticeFormData) {
