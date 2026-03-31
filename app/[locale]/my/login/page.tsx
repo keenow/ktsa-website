@@ -7,9 +7,11 @@
 
 import { useLocale } from 'next-intl'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
-import { signInWithEmail, resetPasswordWithEmail, signInWithPhone, verifyPhoneOtp } from '../actions'
+import { createBrowserClient } from '@supabase/ssr'
+import { resetPasswordWithEmail, signInWithPhone, verifyPhoneOtp } from '../actions'
 
 const COUNTRY_CODES = [
   { code: '+82', label: '🇰🇷 +82' },
@@ -33,8 +35,14 @@ function formatPhoneE164(number: string, countryCode: string): string {
 export default function LoginPage() {
   const locale = useLocale()
   const isKo = locale === 'ko'
+  const router = useRouter()
   const searchParams = useSearchParams()
   const urlError = searchParams.get('error')
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
   // ─── 상태 관리 ─────────────────────────────────────
   const [error, setError] = useState<string | null>(null)
@@ -52,17 +60,36 @@ export default function LoginPage() {
   // ─── 이벤트 핸들러 ──────────────────────────────────
 
   /**
-   * 이메일/비밀번호 로그인 처리
-   * @param e - 폼 제출 이벤트
+   * 이메일/비밀번호 로그인 처리 — 클라이언트에서 직접 Supabase 인증
+   * NOTE: Server Action redirect는 쿠키 전달 누락 이슈 있어 클라이언트 방식 사용
    */
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setLoading(true)
     setError(null)
     const formData = new FormData(e.currentTarget)
-    const result = await signInWithEmail(formData)
-    if (result?.error) setError(result.error)
-    setLoading(false)
+    const email = formData.get('email') as string
+    const password = formData.get('password') as string
+
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    if (authError) {
+      setError('이메일 또는 비밀번호가 올바르지 않습니다.')
+      setLoading(false)
+      return
+    }
+
+    // 프로필 완성 여부 확인
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setLoading(false); return }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name, birth_date, phone')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    const incomplete = !profile || !profile.name || !profile.birth_date || !profile.phone
+    router.push(incomplete ? `/${locale}/my/complete-profile` : `/${locale}/my/dashboard`)
   }
 
   /**
