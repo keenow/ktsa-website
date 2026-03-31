@@ -71,25 +71,32 @@ export default function LoginPage() {
     const email = formData.get('email') as string
     const password = formData.get('password') as string
 
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    console.log('[login] step1: signInWithPassword 시작', { email })
+    const { data: signInData, error: authError } = await supabase.auth.signInWithPassword({ email, password })
     if (authError) {
+      console.error('[login] step1 실패:', authError.message, authError.status)
       setError('이메일 또는 비밀번호가 올바르지 않습니다.')
       setLoading(false)
       return
     }
+    console.log('[login] step1 성공 user.id:', signInData.user?.id)
 
     // 프로필 완성 여부 확인
     const { data: { user } } = await supabase.auth.getUser()
+    console.log('[login] step2: getUser =', user?.id ?? 'null')
     if (!user) { setLoading(false); return }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('name, birth_date, phone')
       .eq('id', user.id)
       .maybeSingle()
+    console.log('[login] step3: profile =', JSON.stringify(profile), 'profileError =', profileError?.message)
 
     const incomplete = !profile || !profile.name || !profile.birth_date || !profile.phone
-    router.push(incomplete ? `/${locale}/my/complete-profile` : `/${locale}/my/dashboard`)
+    const dest = incomplete ? `/${locale}/my/complete-profile` : `/${locale}/my/dashboard`
+    console.log('[login] step4: incomplete =', incomplete, '→ redirect to', dest)
+    router.push(dest)
   }
 
   /**
