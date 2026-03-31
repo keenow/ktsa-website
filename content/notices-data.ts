@@ -26,9 +26,9 @@ export const notices: Notice[] = [
     titleEn: "2026 APTRC – Korea National Team Selection Notice",
     date: "2026-03-31",
     summary:
-      "제2회 아시아 태평양 트레일 러닝 챔피언십(APTRC)이 2026년 11월 중국 우이산에서 개최됩니다. 대한민국 선수단은 ITRA PI를 기준으로 선발 예정이며, 선수단 접수 일정이 확정되는 대로 국가 대표 출전 자격이 있는 선수에게 이메일이 발송됩니다.\n\n챔피언십 경기 일정\n• 11월 26일(목): 롱 트레일 80km\n• 11월 27일(금): U23 & 숏 트레일 40km\n\n공식 홈페이지는 현재 업데이트 중입니다.",
+      "제 1회 울주 APTRC에 이은 두 번째 APTRC(아시아 태평양 트레일 러닝 챔피언십)이 2026년 11월 개최됩니다!\n\n대한민국 선수단은 ITRA PI를 기준으로 선발 예정이며, 선수단 접수 일정이 확정되는 대로 국가 대표 출전 자격이 주어지는 선수에게 이메일이 발송 됩니다.\n대한민국 대표 선수들의 많은 관심과 출전을 부탁드립니다.\n2026 APTRC와 관련된 업데이트는 공지사항을 통해 전달하겠습니다.\n\n[챔피언십 경기 일정]\n11월 26일(목): 롱 트레일 80km (챔피언십 경기)\n11월 27일(금): U23 & 숏 트레일 40km (챔피언십 경기)\n\n공식 홈페이지는 현재 업데이트 중 이니 참고 바랍니다.",
     summaryEn:
-      "The 2nd APTRC will be held in Wuyishan, China in November 2026. The Korea national team will be selected based on ITRA PI scores. Athletes eligible for national team participation will be notified by email once registration schedule is confirmed.\n\nChampionship Schedule\n• Nov 26 (Thu): Long Trail 80 km\n• Nov 27 (Fri): U23 & Short Trail 40 km\n\nThe official website is currently being updated.",
+      "Following the 1st APTRC in Ulju, the 2nd Asia Pacific Trail Running Championships (APTRC) will be held in November 2026!\n\nThe Korea national team will be selected based on ITRA PI scores. Athletes eligible for national team participation will be notified by email once the registration schedule is confirmed.\nWe encourage all Korean representative athletes to participate.\nUpdates regarding the 2026 APTRC will be communicated through official announcements.\n\n[Championship Schedule]\nNov 26 (Thu): Long Trail 80 km (Championship race)\nNov 27 (Fri): U23 & Short Trail 40 km (Championship race)\n\nPlease note that the official website is currently being updated.",
     url: "https://www.aptrc2026.com/ko",
     badge: "선수단 모집",
     badgeEn: "Team Selection",
@@ -41,9 +41,9 @@ export const notices: Notice[] = [
     titleEn: "2nd APTRC Open Race Registration – Deadline April 10",
     date: "2026-03-31",
     summary:
-      "제2회 APTRC는 제11회 그랜드 우이산 슈퍼 트레일 레이스와 동시 개최됩니다. 아마추어 선수들이 참가할 수 있는 오픈경기(100/60/35/20/10km)는 11월 28–29일 진행되며, 참가 신청 마감은 4월 10일입니다.",
+      "제 1회 울주 APTRC에 이은 제 2회 APTRC(아시아 태평양 트레일 러닝 챔피언십)이 2026년 11월 개최됩니다!\n\n제 2회 APTRC는 중국 우이산에서 펼쳐지는 제11회 그랜드 우이산 슈퍼 트레일 레이스와 동시 개최 되며 참가국 대표선수단외에도 아마추어 선수들이 출전할 수 있는 오픈경기가 함께 진행됩니다.\n\n오픈경기는 아래와 같습니다.\n\n[오픈경기]\n📅 2026년 11월 27일–29일\n🏃 거리: 100 / 60 / 35 / 20 / 10km\n📝 참가 신청 마감: 4월 10일까지\n\n[챔피언십/오픈경기 일정]\n11월 26일(목): 롱 트레일 80km (챔피언십 경기)\n11월 27일(금): U23 & 숏 트레일 40km (챔피언십 경기)\n11월 28–29일(토–일): 일반 참가자 레이스(오픈경기)\n\n자세한 정보는 아래 링크를 방문하세요!\n➡️ English → Registration → Registration Entry",
     summaryEn:
-      "The 2nd APTRC is co-hosted with the 11th Grand Wuyi Super Trail Race. Open categories (100/60/35/20/10 km) for amateur runners run November 28–29. Registration closes April 10.",
+      "Following the 1st APTRC in Ulju, the 2nd Asia Pacific Trail Running Championships (APTRC) will be held in November 2026!\n\nThe 2nd APTRC will be co-hosted with the 11th Grand Wuyi Super Trail Race in Wuyishan, China. In addition to national team athletes, open categories are available for amateur runners.\n\n[Open Race]\n📅 November 27–29, 2026\n🏃 Distances: 100 / 60 / 35 / 20 / 10 km\n📝 Registration deadline: April 10\n\n[Championship / Open Race Schedule]\nNov 26 (Thu): Long Trail 80 km (Championship race)\nNov 27 (Fri): U23 & Short Trail 40 km (Championship race)\nNov 28–29 (Sat–Sun): Public race categories (Open)\n\nVisit the link below for more information!\n➡️ English → Registration → Registration Entry",
     url: "https://www.wuyitrail.com/",
     badge: "마감임박",
     badgeEn: "Closing Soon",
