@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { MENU_PERMISSIONS, type Permission } from "@/lib/admin-permissions";
+import "../globals.css";
 
 // ── 목업: 실제 연동 전까지 운영자 전체 권한 부여 ──
 const MOCK_PERMISSIONS: Permission[] = Object.values(MENU_PERMISSIONS);
@@ -29,6 +30,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 
   return (
+    <html lang="ko">
+    <body>
     <div className="flex h-screen bg-gray-50 font-sans text-gray-900 overflow-hidden">
 
         {/* ── 사이드바 ── */}
@@ -101,5 +104,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </main>
         </div>
       </div>
+    </body>
+    </html>
   );
 }
