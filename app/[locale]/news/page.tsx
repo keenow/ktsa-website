@@ -1,5 +1,4 @@
-import { useLocale } from "next-intl";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 /**
@@ -21,7 +20,7 @@ const categoryLabel: Record<string, { ko: string; en: string }> = {
 };
 
 export default async function NewsPage() {
-  const locale = useLocale();
+  const locale = await getLocale();
   const t = await getTranslations("news");
   const isKo = locale === "ko";
 

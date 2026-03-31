@@ -1,11 +1,10 @@
-import { getTranslations } from "next-intl/server";
-import { useLocale } from "next-intl";
+import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
 import UpcomingRaces from "@/components/UpcomingRaces";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export default async function HomePage() {
-  const locale = useLocale();
+  const locale = await getLocale();
   const t = await getTranslations("home");
   const isKo = locale === "ko";
 
