@@ -3,7 +3,7 @@
  * 공지 전체 목록 조회 (관리자 전용, supabaseAdmin 사용)
  * Auth: admin 등급 필요
  */
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function GET() {
@@ -15,4 +15,16 @@ export async function GET() {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data)
+}
+
+export async function POST(request: NextRequest) {
+  const body = await request.json()
+  const { data, error } = await supabaseAdmin
+    .from('notices')
+    .insert(body)
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data, { status: 201 })
 }

@@ -15,10 +15,11 @@ export default function NewNoticePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  const supabase = createSupabaseBrowserClient();
+
   async function handleSubmit(data: NoticeFormData) {
     setSaving(true);
     setError("");
-    const supabase = createSupabaseBrowserClient();
 
     // ─── 이미지 업로드 ─────────────────────────────────────
     let imageUrl: string | null = null;
@@ -33,22 +34,32 @@ export default function NewNoticePage() {
       imageUrl = urlData.publicUrl;
     }
 
-    // ─── DB 저장 ───────────────────────────────────────────
-    const { error: dbErr } = await supabase.from("notices").insert({
-      category:     data.category,
-      title_ko:     data.title_ko,
-      title_en:     data.title_en,
-      body_ko:      data.body_ko,
-      body_en:      data.body_en,
-      badge_ko:     data.badge_ko || null,
-      badge_en:     data.badge_en || null,
-      url:          data.url || null,
-      is_published: data.is_published,
-      pinned:       data.pinned,
-      image_url:    imageUrl,
+    // ─── DB 저장 (API 라우트 → supabaseAdmin) ─────────────
+    const res = await fetch("/api/admin/notices", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        category:     data.category,
+        title_ko:     data.title_ko,
+        title_en:     data.title_en,
+        body_ko:      data.body_ko,
+        body_en:      data.body_en,
+        badge_ko:     data.badge_ko || null,
+        badge_en:     data.badge_en || null,
+        url:          data.url || null,
+        is_published: data.is_published,
+        pinned:       data.pinned,
+        image_url:    imageUrl,
+      }),
     });
 
-    if (dbErr) { setError("저장 실패: " + dbErr.message); setSaving(false); return; }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      setError("저장 실패: " + (err.error ?? res.statusText));
+      setSaving(false);
+      return;
+    }
+
     router.push("/admin/posts");
   }
 

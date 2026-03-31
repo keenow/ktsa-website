@@ -9,7 +9,6 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase";
 import NoticeForm, { type NoticeFormData } from "../../_components/NoticeForm";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 type NoticeRow = {
   id: string;
@@ -45,7 +44,7 @@ export default function EditNoticePage() {
     setSaving(true);
     setError("");
 
-    // ─── 이미지 업로드 ─────────────────────────────────────
+    // ─── 이미지 업로드 (Supabase Storage, 공개 버킷) ──────
     let imageUrl = notice?.image_url ?? null;
     if (data.imageFile) {
       const ext = data.imageFile.name.split(".").pop();
@@ -59,22 +58,32 @@ export default function EditNoticePage() {
     }
     if (data.removeImage) imageUrl = null;
 
-    // ─── DB 업데이트 ───────────────────────────────────────
-    const { error: dbErr } = await supabase.from("notices").update({
-      category:     data.category,
-      title_ko:     data.title_ko,
-      title_en:     data.title_en,
-      body_ko:      data.body_ko,
-      body_en:      data.body_en,
-      badge_ko:     data.badge_ko || null,
-      badge_en:     data.badge_en || null,
-      url:          data.url || null,
-      is_published: data.is_published,
-      pinned:       data.pinned,
-      image_url:    imageUrl,
-    }).eq("id", id);
+    // ─── DB 업데이트 (API 라우트 → supabaseAdmin) ─────────
+    const res = await fetch(`/api/admin/notices/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        category:     data.category,
+        title_ko:     data.title_ko,
+        title_en:     data.title_en,
+        body_ko:      data.body_ko,
+        body_en:      data.body_en,
+        badge_ko:     data.badge_ko || null,
+        badge_en:     data.badge_en || null,
+        url:          data.url || null,
+        is_published: data.is_published,
+        pinned:       data.pinned,
+        image_url:    imageUrl,
+      }),
+    });
 
-    if (dbErr) { setError("저장 실패: " + dbErr.message); setSaving(false); return; }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      setError("저장 실패: " + (err.error ?? res.statusText));
+      setSaving(false);
+      return;
+    }
+
     router.push("/admin/posts");
   }
 
