@@ -7,7 +7,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createSupabaseBrowserClient } from "@/lib/supabase";
 import NoticeForm, { type NoticeFormData } from "../_components/NoticeForm";
 
 export default function NewNoticePage() {
@@ -15,23 +14,19 @@ export default function NewNoticePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const supabase = createSupabaseBrowserClient();
-
   async function handleSubmit(data: NoticeFormData) {
     setSaving(true);
     setError("");
 
-    // ─── 이미지 업로드 ─────────────────────────────────────
+    // ─── 이미지 업로드 (서버 API → supabaseAdmin RLS 우회) ─
     let imageUrl: string | null = null;
     if (data.imageFile) {
-      const ext = data.imageFile.name.split(".").pop();
-      const path = `${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage
-        .from("notice-images")
-        .upload(path, data.imageFile, { upsert: false });
-      if (upErr) { setError("이미지 업로드 실패: " + upErr.message); setSaving(false); return; }
-      const { data: urlData } = supabase.storage.from("notice-images").getPublicUrl(path);
-      imageUrl = urlData.publicUrl;
+      const imgForm = new FormData();
+      imgForm.append("file", data.imageFile);
+      const imgRes = await fetch("/api/admin/notices/upload-image", { method: "POST", body: imgForm });
+      if (!imgRes.ok) { const e = await imgRes.json().catch(() => ({})); setError("이미지 업로드 실패: " + (e.error ?? "unknown")); setSaving(false); return; }
+      const { url } = await imgRes.json();
+      imageUrl = url;
     }
 
     // ─── DB 저장 (API 라우트 → supabaseAdmin) ─────────────
