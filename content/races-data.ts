@@ -133,6 +133,28 @@ export const races: Race[] = [
     organizer: "에코라인",
     sortDate: "2026-10-01",
   },
+  {
+    name: "제2회 APTRC — 제11회 그랜드 우이산 슈퍼 트레일",
+    nameEn: "2nd APTRC — 11th Grand Wuyi Super Trail Race",
+    date: "2026년 11월 27일–29일 (오픈경기) · 11월 26–27일 (챔피언십)",
+    dateEn: "Nov 27–29, 2026 (Open) · Nov 26–27 (Championship)",
+    location: "중국 푸젠성 우이산",
+    locationEn: "Wuyishan, Fujian, China",
+    courses: [
+      { name: "100K", distance: "100km" },
+      { name: "60K",  distance: "60km" },
+      { name: "35K",  distance: "35km" },
+      { name: "20K",  distance: "20km" },
+      { name: "10K",  distance: "10km" },
+    ],
+    status: "접수중",
+    statusEn: "Open",
+    note: "오픈경기 참가 신청 마감: 2026년 4월 10일 | 아마추어 참가 가능",
+    noteEn: "Open category registration deadline: April 10, 2026 | Open to amateur runners",
+    url: "https://www.wuyitrail.com/",
+    organizer: "APTRC / KTSA",
+    sortDate: "2026-11-27",
+  },
 ];
 
 /** 오늘 기준 가장 가까운 예정 대회 n개 반환 */
