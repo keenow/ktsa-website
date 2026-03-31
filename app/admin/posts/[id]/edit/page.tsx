@@ -41,45 +41,52 @@ export default function EditNoticePage() {
     setSaving(true);
     setError("");
 
-    // ─── 이미지 업로드 (서버 API → supabaseAdmin RLS 우회) ─
-    let imageUrl = notice?.image_url ?? null;
-    if (data.imageFile) {
-      const imgForm = new FormData();
-      imgForm.append("file", data.imageFile);
-      const imgRes = await fetch("/api/admin/notices/upload-image", { method: "POST", body: imgForm });
-      if (!imgRes.ok) { const e = await imgRes.json().catch(() => ({})); setError("이미지 업로드 실패: " + (e.error ?? "unknown")); setSaving(false); return; }
-      const { url } = await imgRes.json();
-      imageUrl = url;
-    }
-    if (data.removeImage) imageUrl = null;
+    try {
+      // ─── 이미지 업로드 (서버 API → supabaseAdmin RLS 우회) ─
+      let imageUrl = notice?.image_url ?? null;
+      if (data.imageFile) {
+        const imgForm = new FormData();
+        imgForm.append("file", data.imageFile);
+        const imgRes = await fetch("/api/admin/notices/upload-image", { method: "POST", body: imgForm });
+        if (!imgRes.ok) {
+          const e = await imgRes.json().catch(() => ({}));
+          throw new Error("이미지 업로드 실패: " + (e.error ?? imgRes.statusText));
+        }
+        const { url } = await imgRes.json();
+        imageUrl = url;
+      }
+      if (data.removeImage) imageUrl = null;
 
-    // ─── DB 업데이트 (API 라우트 → supabaseAdmin) ─────────
-    const res = await fetch(`/api/admin/notices/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        category:     data.category,
-        title_ko:     data.title_ko,
-        title_en:     data.title_en,
-        body_ko:      data.body_ko,
-        body_en:      data.body_en,
-        badge_ko:     data.badge_ko || null,
-        badge_en:     data.badge_en || null,
-        url:          data.url || null,
-        is_published: data.is_published,
-        pinned:       data.pinned,
-        image_url:    imageUrl,
-      }),
-    });
+      // ─── DB 업데이트 (API 라우트 → supabaseAdmin) ─────────
+      const res = await fetch(`/api/admin/notices/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          category:     data.category,
+          title_ko:     data.title_ko,
+          title_en:     data.title_en,
+          body_ko:      data.body_ko,
+          body_en:      data.body_en,
+          badge_ko:     data.badge_ko || null,
+          badge_en:     data.badge_en || null,
+          url:          data.url || null,
+          is_published: data.is_published,
+          pinned:       data.pinned,
+          image_url:    imageUrl,
+        }),
+      });
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      setError("저장 실패: " + (err.error ?? res.statusText));
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error("저장 실패: " + (err.error ?? res.statusText));
+      }
+
+      router.push("/admin/posts");
+
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "알 수 없는 오류가 발생했습니다.");
       setSaving(false);
-      return;
     }
-
-    router.push("/admin/posts");
   }
 
   if (!notice) return <div className="text-sm text-gray-400 p-8">불러오는 중...</div>;
