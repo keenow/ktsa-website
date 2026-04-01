@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MENU_PERMISSIONS, type Permission } from "@/lib/admin-permissions";
+import { createSupabaseBrowserClient } from "@/lib/supabase";
 import "../globals.css";
 
-// ── 목업: 실제 연동 전까지 운영자 전체 권한 부여 ──
-const MOCK_PERMISSIONS: Permission[] = Object.values(MENU_PERMISSIONS);
+// NOTE: middleware(proxy.ts)에서 /admin/* 접근 시 admin 등급 검증 완료
+//       레이아웃에서는 전체 메뉴 권한 부여 (세분화 권한은 추후 roles 테이블 연동 예정)
+const ALL_PERMISSIONS: Permission[] = Object.values(MENU_PERMISSIONS);
 
 const NAV_ITEMS = [
   { label: "대시보드",  href: "/admin",                  perm: MENU_PERMISSIONS.DASHBOARD,      icon: "▦" },
@@ -24,9 +26,18 @@ const NAV_ITEMS = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [adminEmail, setAdminEmail] = useState<string>("...");
+
+  // ─── 현재 로그인 관리자 이메일 조회 ──────────────────────
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user?.email) setAdminEmail(user.email);
+    });
+  }, []);
 
   const visibleNav = NAV_ITEMS.filter((item) =>
-    MOCK_PERMISSIONS.includes(item.perm)
+    ALL_PERMISSIONS.includes(item.perm)
   );
 
   return (
@@ -75,8 +86,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="border-t border-[#1e3a6e] px-4 py-3 text-xs text-gray-400">
             {!collapsed ? (
               <div>
-                <p className="font-semibold text-white text-sm">운영자</p>
-                <p className="truncate">operator@ktsa.org</p>
+                <p className="font-semibold text-white text-sm">관리자</p>
+                <p className="truncate">{adminEmail}</p>
                 <Link href="/" className="mt-2 block text-gray-400 hover:text-white">← 사이트 보기</Link>
               </div>
             ) : (
