@@ -195,15 +195,14 @@ export async function POST(request: NextRequest) {
   const isValid = verifyHookSignature(request, rawBody)
   traceAuthHook(svixMessageId, 'signature_checked', { valid: isValid })
   if (!isValid) {
-    // NOTE: 디버깅 목적으로 임시 우회 — 검증 실패해도 진행
     console.warn(
       '[api/email/hook]',
       JSON.stringify({
-        event: 'signature_invalid_continuing',
+        event: 'signature_invalid_rejected',
         svixMessageId,
       })
     )
-    console.log('[Hook] Headers:', Object.fromEntries(request.headers.entries()))
+    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
   if (process.env.LOG_AUTH_HOOK_BODY === 'true') {
     console.log('[api/email/hook] body_preview', rawBody.substring(0, 2048))
