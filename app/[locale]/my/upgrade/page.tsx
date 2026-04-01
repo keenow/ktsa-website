@@ -38,6 +38,8 @@ export default function UpgradePage() {
   const [phone, setPhone] = useState("");
 
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const t = {
     title: isKo ? "회원 업그레이드 신청" : "Membership Upgrade",
@@ -86,9 +88,32 @@ export default function UpgradePage() {
   };
 
   // ─── 이벤트 핸들러 ──────────────────────────────────
-  // NOTE: 정회원/기업회원 폼 submit 핸들러는 각 <form onSubmit> 인라인으로 처리
-  //       현재는 submitted 플래그만 변경 (실제 API 연동은 추후 추가 예정)
-  // TODO: 신청 데이터를 Supabase upgrade_requests 테이블에 저장하는 API 연동 필요
+
+  /**
+   * 업그레이드 신청 API 호출
+   * @param payload - 신청 데이터 (request_type 포함)
+   */
+  async function submitUpgrade(payload: Record<string, unknown>) {
+    setLoading(true);
+    setApiError(null);
+    try {
+      const res = await fetch('/api/member/upgrade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setApiError(data.error || '신청 중 오류가 발생했습니다.');
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setApiError('네트워크 오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   // ─── 렌더링 ─────────────────────────────────────────
   if (submitted) {
@@ -140,7 +165,7 @@ export default function UpgradePage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              setSubmitted(true);
+              submitUpgrade({ request_type: 'regular', race_name: raceName, race_date: raceDate || null, wants_insurance: wantsInsurance });
             }}
             className="space-y-5"
           >
@@ -210,11 +235,15 @@ export default function UpgradePage() {
               </label>
             </div>
 
+            {apiError && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{apiError}</p>
+            )}
             <button
               type="submit"
-              className="w-full bg-[#1e3a6e] text-white rounded-xl py-3 text-sm font-semibold hover:bg-[#152d57] transition-colors"
+              disabled={loading}
+              className="w-full bg-[#1e3a6e] text-white rounded-xl py-3 text-sm font-semibold hover:bg-[#152d57] transition-colors disabled:opacity-50"
             >
-              {t.regularBtn}
+              {loading ? (isKo ? "처리 중..." : "Processing...") : t.regularBtn}
             </button>
           </form>
         )}
@@ -224,7 +253,7 @@ export default function UpgradePage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              setSubmitted(true);
+              submitUpgrade({ request_type: 'corporate', company_name: companyName, biz_number: bizNumber, manager_name: managerName, phone });
             }}
             className="space-y-5"
           >
@@ -262,11 +291,15 @@ export default function UpgradePage() {
               ))}
             </div>
 
+            {apiError && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{apiError}</p>
+            )}
             <button
               type="submit"
-              className="w-full bg-[#1e3a6e] text-white rounded-xl py-3 text-sm font-semibold hover:bg-[#152d57] transition-colors"
+              disabled={loading}
+              className="w-full bg-[#1e3a6e] text-white rounded-xl py-3 text-sm font-semibold hover:bg-[#152d57] transition-colors disabled:opacity-50"
             >
-              {t.corporateBtn}
+              {loading ? (isKo ? "처리 중..." : "Processing...") : t.corporateBtn}
             </button>
           </form>
         )}
