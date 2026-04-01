@@ -1,11 +1,30 @@
+/**
+ * @file 관리자 대시보드 통계 API
+ * @description 회원 수 통계(전체·준회원·정회원·이번달 신규)와 최근 가입자 목록을 반환한다.
+ * @module admin
+ */
+
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { requireAdmin } from "@/lib/admin-auth";
 
+/**
+ * GET /api/admin/stats
+ * 관리자 대시보드용 회원 통계 집계 (관리자 전용)
+ *
+ * Returns: { total, general, member, newThisMonth, recentMembers }
+ * Auth: admin 등급 필요
+ */
 export async function GET() {
+  // ─── 인증 검증 ────────────────────────────────────────────
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   try {
     const now = new Date();
     const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
+    // ─── 5개 쿼리 병렬 실행 ──────────────────────────────────
     const [totalRes, generalRes, memberRes, newThisMonthRes, recentRes] = await Promise.all([
       supabaseAdmin
         .from("profiles")

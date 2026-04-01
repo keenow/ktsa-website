@@ -1,7 +1,30 @@
+/**
+ * @file 관리자용 회원 목록 조회 API
+ * @description 회원 목록을 검색·필터 조건으로 조회한다. admin 등급 인증 필요.
+ * @module admin
+ */
+
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { requireAdmin } from "@/lib/admin-auth";
 
+/**
+ * GET /api/admin/members
+ * 회원 목록 조회 (관리자 전용)
+ *
+ * Query params:
+ *   - search: 이름·이메일 부분 검색
+ *   - grade: 회원 등급 필터 (general | member | admin | all)
+ *   - active: 활성 여부 필터 (true | false | all)
+ *
+ * Returns: { members: Profile[], total: number }
+ * Auth: admin 등급 필요
+ */
 export async function GET(request: NextRequest) {
+  // ─── 인증 검증 ────────────────────────────────────────────
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") ?? "";
