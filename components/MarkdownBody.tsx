@@ -103,13 +103,18 @@ function parseMarkdown(md: string): string {
   return html.join("\n");
 }
 
+/** HTML 본문인지 마크다운인지 감지 */
+function isHtml(content: string): boolean {
+  return /^\s*<[a-zA-Z]/.test(content.trim());
+}
+
 /**
- * 마크다운 본문 렌더러
- * @param content - 마크다운 문자열
+ * 마크다운 또는 HTML 본문 렌더러
+ * @param content - 마크다운 문자열 또는 HTML 문자열
  * @param className - 추가 클래스
  */
 export default function MarkdownBody({ content, className = "" }: MarkdownBodyProps) {
-  const html = parseMarkdown(content);
+  const html = isHtml(content) ? content : parseMarkdown(content);
   return (
     <div
       className={`text-sm ${className}`}
