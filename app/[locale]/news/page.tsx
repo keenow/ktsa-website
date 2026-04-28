@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { createSupabaseServerClient } from "@/lib/supabase-server";
 import Image from "next/image";
+import MarkdownBody from "@/components/MarkdownBody";
 
 /**
  * @file 뉴스·공지 페이지
@@ -96,9 +97,12 @@ export default async function NewsPage() {
                 )}
 
                 {/* ─── 본문 ─── */}
-                <p className="text-sm text-gray-600 leading-relaxed mb-3 whitespace-pre-line">
-                  {isKo ? notice.body_ko : notice.body_en}
-                </p>
+                {(isKo ? notice.body_ko : notice.body_en) && (
+                  <MarkdownBody
+                    content={isKo ? notice.body_ko : notice.body_en}
+                    className="mb-3 text-sm"
+                  />
+                )}
 
                 {/* ─── 링크 ─── */}
                 {notice.url && (
