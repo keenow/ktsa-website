@@ -79,16 +79,12 @@ export default async function HomePage() {
                   <p className="text-sm font-semibold text-gray-900 mb-1 leading-snug">
                     {isKo ? notice.title_ko : notice.title_en}
                   </p>
-                  {notice.url && (
-                    <a
-                      href={notice.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-[#1e3a6e] hover:underline"
-                    >
-                      {isKo ? "자세히 보기 →" : "Learn More →"}
-                    </a>
-                  )}
+                  <Link
+                    href={`/${locale}/news`}
+                    className="text-xs text-[#1e3a6e] hover:underline"
+                  >
+                    {isKo ? "자세히 보기 →" : "Learn More →"}
+                  </Link>
                 </div>
               ))}
             </div>
